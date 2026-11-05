@@ -1,0 +1,26 @@
+name: Projeto MAC0122
+on:
+  push: { branches: [main] }
+  workflow_dispatch:
+permissions: { contents: read, pages: write, id-token: write }
+concurrency: { group: pages, cancel-in-progress: true }
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: gcc -std=c99 -Wall -Wextra -o gera src/gera_main.c src/htmlgen.c src/txtparse.c src/cdestaque.c src/slug.c
+      - run: ./gera txt site && touch site/.nojekyll
+      - run: sh tests/check_links.sh site      # opcional: falha o deploy se houver link quebrado
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with: { path: site }
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
