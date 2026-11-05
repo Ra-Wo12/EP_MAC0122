@@ -1,0 +1,164 @@
+[CTX] — COMUM A TODAS AS IAs  
+PROJ  EP MAC0122(USP): C → gerador de site HTML estático do curso. Fase1 = conteúdo Aval1. Só libc.
+IN    N×.txt = cabeçalho de marcadores + corpo.   OUT  out/
+LAYOUT out/index.html → {idx_tecnica,idx_algoritmo,idx_autores,idx_data,idx_conceitos,idx_problema}.html
+       out/p/<slug>.html (1/TXT) · out/c/<slug>.html (1/conceito) · out/css/estilo.css
+SLUG   minúsc, sem acento, [a-z0-9_]; única impl.: slug.c (todos usam)
+TXT-FMT linhas iniciais `Chave: valor` (corta só no 1º ':'), Chave∈{Tecnica,Algoritmo,Autores,Data,Conceitos,Problema}
+       case-insens., aceitar acento (Técnica); valor vazio ⇒ ignorar; multivalor ','(Autores,Conceitos); trim.
+       1ª linha vazia/sem `Chave:` ⇒ começa corpo. CRLF/BOM tolerados.
+       corpo: texto livre | bloco C entre linhas `<<C` … `C>>` | linha `REF: …` | `[[slug]]`=link interno
+       !! delimitadores <<C/C>> e [[ ]] = DECISÃO NOSSA (enunciado não define). Todos obedecem.
+API-CONGELADA
+  slug.h     char *slug(const char*s);                       /* malloc */
+  txtparse.h typedef struct{char *arq,*slug,*titulo,*tecnica,*algoritmo,*data,*problema,*corpo;
+                            char **autores,**conceitos; int nAut,nConc;}Doc;
+             int doc_le(const char*path,Doc*d);  /*0 ok,<0 erro*/   void doc_libera(Doc*d);
+  cdestaque.h void c2html(const char*src,size_t n,FILE*o);   /*emite <pre class="c"><code>…*/
+              void c_pagina(const char*src,size_t n,FILE*o,const char*titulo);
+              const char *cdestaque_css(void);               /*única fonte da paleta*/
+  htmlgen.h  int gera_site(Doc*v,int n,const char*dirOut);
+CLASSES-CSS  .k-pp .k-tipo .k-cmd .k-com .k-str .k-chr .k-num
+ENC  UTF-8, HTML5, lang=pt-BR, escapar & < > " em todo texto/código.
+C    C99; gcc -std=c99 -Wall -Wextra -fsanitize=address,undefined ⇒ 0 warnings; guardas de include; main só em *_main.c.
+SAÍDA determinística (índices ordenados). Sem fabricar fatos: dúvida ⇒ marcar `(verif.)`.
+ORDEM  CTX → {A1,A2,A4,A5} paralelo → A3 (usa A1,A2) → A7 → A6
+ARQUIVOS-DO-PLANO  00_CTX · A1_parser · A2_filtro_c_html · A3_gerador_indexadores · A4_conteudo_txt · A5_extra_kruskal_dijkstra · A6_entregaveis · A7_qa_integracao
+--------------------------------------------------------------------------------------------------------------------------
+[A7] QA / INTEGRAÇÃO (após A1-A5)
+(colar junto com 00_CTX.txt)
+ T1 compilar tudo c/ -Wall -Wextra -fsanitize=address,undefined ⇒ 0 warnings
+ T2 invariante do highlighter (A2) nos 32 .c dos zips + todos os blocos <<C>> dos TXT
+ T3 gera txt out ⇒ existem index.html + 6 índices ; check_links = 0 quebrados ; nenhum <li> vazio
+ T4 reexecutar gera ⇒ saída idêntica (diff -r vazio)
+ T5 kruskal(k1)=12, kruskal(k2)=39, dijkstra(k1,S=0)=[0,2,5,3,7,4,5]
+ T6 TXT sem marcador/ com marcador vazio ⇒ ignorado sem erro ; conceito sem TXT ⇒ stub gerado
+ T7 conferir cada `(verif.)` removido ou resolvido ; cada TXT tem ≥1 REF
+ T8 relatório: tabela requisito-do-enunciado → evidência (arquivo/teste)
+ T9 paleta do A2 rastreável ao link da Wikipedia (comentário em cdestaque_css() + docs)
+------------------------------------------------------------------------------------------------------------------
+[A1] PARSER TXT  → slug.c/h, txtparse.c/h, txtparse_test.c
+(colar junto com 00_CTX.txt)
+FAZER  implementar doc_le/doc_libera/slug conforme [CTX].
+  titulo = Algoritmo ‖ Problema ‖ 1ª linha corpo ‖ nome do arq.
+  slug: NFD→remover diacríticos (UTF-8 manual: á→a ç→c …), espaço/pontuação→'_', colapsar '_'.
+  autores/conceitos: split ',' + trim + descartar vazios; dedupe case-insens.
+  ler arquivo inteiro com malloc/realloc; erro de E/S ⇒ <0 sem vazar.
+TESTES  marcador ausente | marcador vazio | 'Problema: a: b' | CRLF | BOM | sem corpo | só cabeçalho |
+        'Técnica:' c/ acento | arquivo vazio | linha 100KB | valgrind/ASan limpo.
+EXEMPLO-OURO  (enunciado) Tecnica: Método guloso / Algoritmo: Kruskal para árvore espalhada mínima /
+  Autores: Joseph Kruskal / Data: 1956 / Conceitos: Grafos, Árvores, árvore espalhada mínima, union-find /
+  Problema: Dado um grafo não dirigido com pesos nas arestas, determinar sua árvore espalhada mínima
+  ⇒ nConc=4, nAut=1.
+---------------------------------------------------------------------------------------------------------------
+[A4] CONTEÚDO TXT (Fase 1) → txt/NN_slug.txt   (formato [CTX]; escrever em pt-BR didático)
+(colar junto com 00_CTX.txt)
+REGRAS  1 TXT por tópico; ≥1 REF real (livro/artigo; preferir livros) ; código C = trechos dos zips, LIMPOS (sem DEPURA/LIMREC/lixo);
+  `(verif.)` = autor/data NÃO confirmados: pesquisar e confirmar ou deixar campo vazio. Nunca inventar.
+TABELA  ∅=vazio | src=arquivo-fonte | !=armadilha
+ 01 busca_binaria | Divisão-e-conquista | Busca binária | ∅ | ∅ | vetor ordenado, invariante de laço, O(log n) | src aula_06_busca_binaria.c  ! main chama buscaBinaria(vet,0,n,x) com d=n (fora do vetor) ⇒ usar n-1
+ 02 mdc_euclides | Redução/recursão | Algoritmo de Euclides (MDC) | Euclides | c. 300 a.C. (Elementos, Livro VII) | MDC, recursividade, divisibilidade | src aula_06_mdc_euclides.c  ! remover `conta++==10 break` (trunca laço)
+ 03 ordena_tentativa_erro | Tentativa-e-erro (backtracking) | Ordenação por tentativa e erro | ∅ | ∅ | backtracking, permutação, O(n!) | src ordena_tentativa_erro.c/.h
+ 04 ordena_fusao | Divisão-e-conquista | Ordenação por fusão (Merge Sort) | J. von Neumann (verif.) | 1945 (verif.) | recursividade, fusão, O(n log n) | src aula_07_ordena_fusao.c ! Aux[MAX] fixo
+ 05 ordena_rapido | Divisão-e-conquista | Ordenação rápida (Quicksort) | C.A.R. Hoare (verif.) | 1959-61 (verif.) | partição, pivô, pior caso O(n²) | src aula_07_ordena_rapido.c ! esquema é Lomuto (pivô=último), não o original de Hoare
+ 06 ordena_monte | Estrutura de dados (monte) | Ordenação por monte (Heap Sort) | J.W.J. Williams (verif.) | 1964 (verif.) | monte, árvore em vetor (2i+1,2i+2), O(n log n) | src aula_07_ordena_monte.c
+ 07 ordena_frequencia | Método guloso (conforme cabeçalho do código) | Ordenação por frequência (contagem; base do Radix/LSD) | ∅ | ∅ | vetor de bits, estabilidade, O(n+u) | src aula09_ordena_por_frequencia.c ; REF Sedgewick "Algorithms in C" cap.10, Feofiloff(IME) radix
+ 08 ordena_bolha_strings | Comparação-troca | Ordenação bolha c/ vetor de ordem | ∅ | ∅ | vetor de ordem, strings, comparação de métodos | src aula09_ordena_string_compara_metodos.c + aula09_nomes_*.txt
+ 09 ordena_selecao_direta | Comparação-troca | Ordenação por seleção direta | ∅ | ∅ | invariante, O(n²) | ! enunciado cita, ZIPS NÃO TÊM CÓDIGO ⇒ escrever do zero (C99, mesmo estilo dos demais)
+ 10 espalhamento | Espalhamento (hashing) | Tabela de espalhamento p/ palavras reservadas de C | ∅ | ∅ | função de espalhamento, colisão, encadeamento | src exerc_espalhamento.c (tabela: colisões f1..f4 = 14/5/2/2 lista1; 17/12/4/3 lista2), tarefa2_anon6/7/8.c, palavra_reservadas_*.txt  ! anon7: espalh() termina em `return` sem valor ⇒ corrigir; anon* = trabalhos anonimizados ⇒ só exemplo, não atribuir autoria
+ 11 apontadores_registros | Estrutura de dados | Apontadores, struct e typedef | ∅ | ∅ | apontador, registro, passagem por referência | src apontadores.c, exemplo_registros.c ! buscaPorId/buscaPorNome são stubs "fazer..." ⇒ implementar
+ 12 lista_ligada | Estrutura dinâmica | Lista ligada simples (insere fim, remove por id/nome) | ∅ | ∅ | alocação dinâmica, union, nó cabeça | src lista_ligada.c(`void main`→int), lista_ligada_2.c (exercícios 1-3 sem solução ⇒ resolver) , sem08_struct_lista_ligada.c
+ 13 pilha | Estrutura de dados | Pilha (vetor e lista ligada) | ∅ | ∅ | LIFO, notação pós-fixa | src sem08_vetor_pilha.c, sem08_struct_lista_ligada_pilha.c
+ 14 fila | Estrutura de dados | Fila circular (vetor) e fila em lista ligada | ∅ | ∅ | FIFO, fila circular | src sem08_vetor_fila.c (2 casos esquecidos em aula: fila vazia→mover ini; 1 elem→mover fim), sem08_struct_lista_ligada_fila.c
+ 15 busca_largura | Busca em grafos | Busca em largura (BFS) | (verif.) | (verif.) | grafo, fila, lista de vizinhos | src busca_em_largura.c + .txt  ! #include "../lista_ligada/fila_lista_ligada_struct.h" NÃO está nos zips ⇒ reescrever fila inline
+ 16 busca_profundidade | Busca em grafos | Busca em profundidade (DFS) | (verif.) | (verif.) | grafo, pilha | src busca_em_profundidade.txt = só PSEUDOCÓDIGO ⇒ implementar C
+ 17 kruskal | Método guloso | Kruskal para árvore espalhada mínima | Joseph Kruskal | 1956 | Grafos, Árvores, árvore espalhada mínima, union-find | src algoritmo_kruskal_arv_esp_minima.c ; REF Kruskal 1956 (Proc. AMS 7(1)) (verif.), https://users.ime.usp.br/~pf/algoritmos_para_grafos/aulas/kruskal.html
+ 18 dijkstra | Método guloso | Dijkstra (distância mínima) | Edsger W. Dijkstra | 1956 | Grafos, caminho mínimo, fila de prioridade | src pseudocódigo do enunciado ; REF Dijkstra 1959 Numer. Math. 1 (verif.) — texto deve explicar 1956 (concepção) vs 1959 (publicação)
+ c_* conceitos (1 TXT cada, marcadores só Conceitos/vazios): grafo, árvore, árvore espalhada mínima, recursividade, union-find, vetor, complexidade, método guloso, divisão-e-conquista, tentativa-e-erro, lista ligada, espalhamento
+Cada TXT: Problema 1 frase; corpo = ideia → invariante/prova curta → complexidade → código `<<C…C>>` → REF.
+-------------------------------------------------------------------------------------------------------------------------------------------------
+[A2] FILTRO C→HTML (módulo OBRIGATÓRIO) → cdestaque.c/h, cdestaque_main.c
+(colar junto com 00_CTX.txt)
+LINK-DO-ENUNCIADO (Wikipedia — OBRIGATÓRIO, fonte da paleta):
+  https://en.wikipedia.org/wiki/Syntax_highlighting
+  Enunciado: "Usar sistema de cores sugeridos pela WikiPedia."
+  ⇒ web_fetch deste URL ANTES de codificar cdestaque_css(); extrair o esquema de cores sugerido;
+    registrar no código (comentário) e em docs: URL + data de acesso + mapeamento classe→cor.
+  Fallback SÓ se a página não trouxer/abrir: cmd azul, tipo teal, pp magenta, com verde/cinza itálico, str vermelho, num laranja.
+CLI  cdestaque [-f] arq.c > saida.html   (-f = só fragmento <pre>)
+LÉXICO 1 passada, máquina de estados, sem regex. Spans (classe):
+  pp  : '#' no início de linha (após espaços) + diretiva (include,define,ifdef,ifndef,endif,if,else,elif,undef,pragma,error)
+        + header-name <x.h> / "x.h" inteiro. Resto da linha do #define = código normal.
+  tipo: int char float double long short unsigned signed void _Bool bool size_t FILE clock_t struct union enum typedef const static extern register volatile auto inline
+  cmd : if else for while do switch case default break continue goto return sizeof
+  com : // até \n  |  /* … */ (multilinha)       str: "…" c/ escapes \" \\     chr: '…'     num: 0x.. 1e-3 3.4f 10UL
+  id/pontuação: sem span.   EOF dentro de com/str ⇒ fechar span (nunca travar).
+CASOS-LIMITE (existem no corpus!)
+  `/*/ texto */` (aula_07_ordena_rapido.c: '/*/' NÃO fecha; só '*/')   `/*//DEPURA …*/`
+  '//' ou '/*' dentro de "string" ≠ comentário   '"' dentro de comentário   '\'' e '\\' em chr
+  `#include <stdio.h>  /* c */` na mesma linha   continuação '\' em #define   tabs   UTF-8 em comentário (2 arqs)
+  `x<y && a>b` ⇒ escapar < > &.
+PALETA  cores SÓ em cdestaque_css() (fonte: LINK-DO-ENUNCIADO acima).
+REUSO-CURSO(opcional, citar)  lookup de palavra reservada via tabela hash (exerc_espalhamento.c, tarefa2_anon8.c achou
+        params sem colisão p/ 32 palavras) ou busca binária em vetor ordenado (aula_06_busca_binaria.c).
+INVARIANTE-TESTE  strip_tags(unescape(saida)) == entrada, byte a byte, nos 32 arquivos .c dos zips (corpus ASCII + 2 UTF-8; 44 #define, 49 #include, 0 #pragma).
+------------------------------------------------------------------------------------------------------------------
+[A3] GERADOR + INDEXADORES → htmlgen.c/h, gera_main.c   (depende de A1,A2)
+(colar junto com 00_CTX.txt)
+CLI  gera <dir_txt> <dir_out>   ; lê *.txt c/ doc_le ; ordena ; escreve site.
+PÁG-DOC p/<slug>.html: nav comum(→index + 6 índices) · h1 título · tabela de metadados, cada valor = link p/ idx_X.html#<slug(valor)>
+        · corpo: parágrafos, `<<C…C>>`→c2html, `[[s]]`→<a href=../p/s.html>, linhas REF→<h2>Referências</h2><ol>.
+        · auto-link: ocorrência (case-insens.) de nome de Conceito no corpo/Problema → ../c/<slug>.html (1ª ocorrência/parágrafo).
+ÍNDICES (doc com campo vazio NÃO entra no índice daquele campo; sem <li> vazio)
+  tecnica   : Técnica → [Algoritmos]                  algoritmo : alfabético → pág
+  autores   : Autor → [(Algoritmo, Data)]              data      : cronológico ↑ "ANO: Autor (Algoritmo)"
+  conceitos : Conceito → [págs que citam] + link c/<slug>.html     problema : Problema (texto) → pág
+DATA→chave num: "1956"→1956 ; "c. 300 a.C."→-300 ; falhou ⇒ string, vai ao fim.
+CONCEITO sem TXT próprio ⇒ gerar stub c/<slug>.html listando quem o cita (nenhum link quebrado).
+index.html: título + 6 links + lista de todas as páginas.   estilo.css = layout + cdestaque_css().
+ESTRUT/ALG (reuso curso, citar)  buckets = lista ligada (sem08 / lista_ligada_2.c); dedupe = ordenar+compactar ou hash;
+  ordenação estável própria (fusão: aula_07_ordena_fusao.c) ou qsort(comentar). Nada de limite fixo de N docs.
+ENTREGA-INTERNA  script check_links: todo href/src relativo resolve a arquivo existente; HTML bem-formado (tags balanceadas).
+-----------------------------------------------------------------------------------------------------------------
+[A5] PARTE EXTRA: Kruskal + Dijkstra em C → aem_kruskal.c, dijkstra.c, grafo_k1.txt, grafo_k2.txt
+(colar junto com 00_CTX.txt)
+LINK-DO-ENUNCIADO (aula 22/10, Kruskal — IME/USP, Feofiloff):
+  https://users.ime.usp.br/~pf/algoritmos_para_grafos/aulas/kruskal.html
+GRAFO-FMT (compartilhado)  linha1: `V A` ; depois A linhas `u v w` (vértices 0..V-1, w int ≥0). Linhas começando '#' = comentário.
+aem_kruskal.c  refatorar algoritmo_kruskal_arv_esp_minima.c (semana 13):
+  - ler de argv[1] (default grafo_k1.txt) ; V,A via malloc (hoje: hardcode grafo1()/grafo2() com int[][3])
+  - manter: qsort por peso, union-find c/ compressão de caminho + união por altura, empate ⇒ menor índice
+  - CORRIGIR: printf('%c','0'+v) só vale p/ v≤9 ⇒ "%d" ; `rx>total_vertices` ⇒ `>=` ; `int ct` não usado ;
+    debug (imprime_aresta/vertices) atrás de flag -d ; validar u,v∈[0,V) ; grafo desconexo ⇒ floresta + aviso (já existe msg) ; free tudo.
+  - compilar: gcc -o aem_kruskal.o aem_kruskal.c
+  - ORÁCULO  grafo_k1(V=7,A=11: 0-1:2 0-3:3 1-2:3 1-3:1 1-4:5 2-4:5 3-4:4 3-5:1 4-5:5 4-6:5 5-6:1) ⇒ peso 12 (6 arestas)
+             grafo_k2(mesmas arestas c/ pesos 7 5 8 9 7 5 15 6 8 9 11 na ordem do código original) ⇒ peso 39 [calc. manual: confirmar rodando]
+  - EXTRA: abrir o LINK-DO-ENUNCIADO (IME), comparar c/ nossa versão, citar complexidade O(A log A) e ponto de divergência.
+dijkstra.c  a partir do pseudocódigo do enunciado (linhas 1-19):
+    void dijkstra(Graph[],dist[],prev[],source){ for each v: dist[v]←INF; prev[v]←UNDEF; add v to Q;
+      dist[source]←0; while(Q not empty){ u←argmin dist in Q; Q.remove(u);
+      for each edge(u,v){ alt←dist[u]+Dist(u,v); if(alt<dist[v]){dist[v]←alt; prev[v]←u;} } } }
+  - `dijkstra -s S [-d] arq` ; -d = dirigido (default: não-dirigido, cada aresta nos 2 sentidos)
+  - dist[]=INF(INT_MAX/2, evitar overflow em dist[u]+w) ; prev[]=-1 ; Q = vetor de flags O(V²) ; achar u=min dist em Q ;
+    se dist[u]==INF ⇒ break (inacessíveis) ; relaxar (u,v) ; rejeitar w<0 com erro.
+  - saída: dist[v] e caminho S→v por prev[] (impresso invertendo recursivamente).
+  - ORÁCULO  grafo_k1 com S=0 ⇒ dist=[0,2,5,3,7,4,5] (calc. manual: confirmar).
+  - compilar: gcc -o dijkstra.o dijkstra.c
+Ambos: C99, sem warnings, ASan/UBSan limpos; comentários no estilo dos zips (ideia→invariante→complexidade).
+-----------------------------------------------------------------------------------------------------------------------------
+[A6] ENTREGÁVEIS DOCUMENTAIS + EMPACOTAMENTO → docs/*.txt, Makefile, build.sh, *.zip
+(colar junto com 00_CTX.txt)
+NÃO INVENTAR: pedir ao usuário os fatos de 1-4; deixar `<<PREENCHER>>` onde faltar.
+ 1 NUSP+nomes ×4 membros (prazo "antes de 29/10": JÁ VENCIDO — hoje 05/11/2026; perguntar se foi entregue)
+ 2 membros.txt (1 pág): quem fez o quê (mapear A1..A5 → pessoas)
+ 3 dialogos_ia.txt: como foram os diálogos c/ cada IA (prompts-chave, iterações, o que mudou)
+ 4 dificuldades_ia.txt: lista de IAs usadas (+ melhor/pior), maiores dificuldades POR IA
+ 5 como_compilar.txt: 1 linha/programa, no formato do enunciado ("para o Kruskal, usar 'aem_kruskal.c' e 'grafo_k1.txt' em um diretório e compilar com gcc -o aem_kruskal.o aem_kruskal.c"):
+     cdestaque : gcc -std=c99 -Wall -o cdestaque cdestaque.c cdestaque_main.c
+     gera      : gcc -std=c99 -Wall -o gera gera_main.c htmlgen.c txtparse.c cdestaque.c slug.c  (rodar: ./gera txt out)
+     aem_kruskal / dijkstra : ver A5 ; demais .c de aula: cada um standalone (gcc -o x.o x.c) — listar quais compilam (aula_07_compara_metodos.c precisa de ordena_tentativa_erro.h no mesmo dir ; busca_em_largura.c só após A4#15)
+ 6 fontes_txt.zip : TODOS os .txt de A4 (Fase1 = conteúdo da Aval1)
+ 7 fontes_c.zip   : todo C que deve funcionar + auxiliares (grafo_k1.txt, grafo_k2.txt, aula09_nomes_*.txt, palavra_reservadas_*.txt) + Makefile(all/test/clean)
+REFERÊNCIAS-DO-ENUNCIADO a citar nos docs: Wikipedia Syntax_highlighting (ver A2) ; IME Kruskal (ver A5).
+---------------------------------------------------------------------------------------------------------------------
+
