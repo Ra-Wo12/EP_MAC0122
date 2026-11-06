@@ -42,3 +42,14 @@ um arquivo explicando as maiores dificuldades encontradas em cada IA usada (inic
 um arquivo explicando como compilar cada código C usado (e.g. "para o Kruskal, usar 'aem_kruskal.c' e 'grafo_k1.txt' em um diretório e compilar com "gcc -o aem_kruskal.o aem_kruskal.c");
 um arquivo compactado com os fontes TXT (conteúdo do MAC122 usados para processar - na fase 1, todo o conteúdo da avaliação 1);
 um arquivo compactado com os fontes C (todos os código C que devem funcionar) e arquivos auxiliares (e.g. TXT usado para criar um grafo a ser processado pelo Kruskal.
+
+Organização do Repositório, de acordo com as atribuições de cada IA
+repo/
+├─ txt/            00_… c_*.txt … 18_dijkstra.txt   ← fonte do conteúdo (A4)
+├─ src/            slug, txtparse, cdestaque, htmlgen, gera_main   (A1-A3)
+├─ extra/          aem_kruskal.c, dijkstra.c, grafo_k1.txt, grafo_k2.txt   (A5)
+├─ aula/           .c e .txt de apoio dos zips
+├─ entrega/        membros, diálogos, dificuldades, como_compilar   (A6)
+├─ tests/          check_links, roundtrip   (A7)
+├─ .github/workflows/site.yml
+└─ .gitignore      gera  *.o  site/
