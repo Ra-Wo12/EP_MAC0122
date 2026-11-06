@@ -1,6 +1,10 @@
 # EP_MAC0122
 Repositório do EP de MAC0122
 
+Instrução para a criação e desenvolvimentos:
+ A IA (Claude) gerou 7 blocos independentes, que podem ser trabalhados individualmente. PORÉM, para cada bloco, colar no prompt também o [CTX], que contextualiza a IA para o projeto e sua realização.
+ Quando for desenvolver, analisar a estrutura definida ao final deste README. Resumidamente, sabendo o arquivo que for trabalhar, colocar "/" após o arquivo raiz, por exemplo, se for desenvolver para o "scr", colocar no nome do arquivo uma "/" após ele, verá que ficou com mesma estrutura de uma pasta, colocar nelas arquivos separados, .txt, .c e etc. Qualquer dúvida, perguntar para mim (Rafael) que posso ou responder, ou perguntar para o Claude o que ele planejou. Lembrem de anotar resumos das conversas e dificuldades com as IAs para o relatório.
+
 Enunciado:
 
 O objetivo principal deste EP é implementar um sistema em C que gera páginas HTML de um curso de MAC122, baseado no material estudado nesta edição do MAC122.
