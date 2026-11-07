@@ -1,4 +1,4 @@
-Tecnica: Método guloso (conforme cabeçalho do código)
+Tecnica: Método guloso 
 Algoritmo: Ordenação por frequência (contagem; base do Radix/LSD)
 Autores:
 Data:
