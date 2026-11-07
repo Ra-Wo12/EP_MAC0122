@@ -24,6 +24,39 @@ C    C99; gcc -std=c99 -Wall -Wextra -fsanitize=address,undefined ⇒ 0 warnings
 SAÍDA determinística (índices ordenados). Sem fabricar fatos: dúvida ⇒ marcar `(verif.)`.
 ORDEM  CTX → {A1,A2,A4,A5} paralelo → A3 (usa A1,A2) → A7 → A6
 ARQUIVOS-DO-PLANO  00_CTX · A1_parser · A2_filtro_c_html · A3_gerador_indexadores · A4_conteudo_txt · A5_extra_kruskal_dijkstra · A6_entregaveis · A7_qa_integracao
+
+[A4-OUT] — HANDOFF DO A4 (colar junto com 00_CTX.txt)
+ESTADO  A4 FEITO. IN do projeto = txt/ (30 arq, UTF-8, LF, sem BOM). NÃO editar txt/; achou erro ⇒ reportar (arq,linha,problema) ao dono do A4.
+ARQ     18 algs txt/NN_slug.txt (01..18) · 12 conceitos txt/c_slug.txt
+        algs : busca_binaria mdc_euclides ordena_tentativa_erro ordena_fusao ordena_rapido ordena_monte ordena_frequencia ordena_bolha_strings ordena_selecao_direta espalhamento apontadores_registros lista_ligada pilha fila busca_largura busca_profundidade kruskal dijkstra
+        conc : grafo arvore arvore_espalhada_minima recursividade union_find vetor complexidade metodo_guloso divisao_e_conquista tentativa_e_erro lista_ligada espalhamento
+SLUG    slug(x): minúsc, sem acento, resto ⇒ `_` (hífen/espaço também), sem `_` repetido/borda. Slug do alg = nome sem `NN_`.
+FORMATO (parser A1)
+  cab   SEMPRE 6 linhas, nesta ordem: Tecnica Algoritmo Autores Data Conceitos Problema ; valor vazio ⇒ ignorar ; 1ª linha vazia ⇒ começa corpo
+  multi só Autores e Conceitos (`,`) ; ∄ vírgula dentro de parênteses ; Data e Tecnica = texto livre, valor único (têm `;` `(` `)` `,`)
+  c_*   Conceitos = nome do próprio conceito ; demais chaves vazias ⇒ título da página c/ = esse valor
+  corpo parágrafos por linha vazia ; ` - item` = lista (1/linha) ; indentação em 17 (Pseudocódigo) ⇒ preservar ; REF: = linha de referência (2-4/arq; 07,08,17 têm URL)
+  [[s]] resolve: existe alg s ⇒ p/s.html ; senão c/s.html ; senão ERRO.  ! colisões alg×conceito: pilha fila espalhamento lista_ligada ([[pilha]],[[fila]] = alg)
+  bloco `<<C` … `C>>` (linhas exatas) ; 26 blocos ; programa completo c/ main, EXCETO 1º bloco de 03 (.h, sem main) ; só /* */ (∄ //) ; acentos UTF-8 em comentário/string ⇒ c2html não quebra bytes ; escapar & < > "
+  texto Unicode: ² ₂ ⌊ ⌋ Ω Θ α · ≤ ≥ ⇒ lang=pt-BR
+GERAR
+  p/    1 por alg ; título = Algoritmo ; mostra Tecnica,Autores,Data,Problema,Conceitos(links c/),corpo,C via c2html,REF
+  c/    1 por TERMO distinto de Conceitos = 47 (12 c/ c_*.txt ; 35 SEM c_*) ⇒ sem c_: página mínima = nome + algs que citam ; sempre listar "algs que citam"
+        sem c_: vetor ordenado, invariante de laço, MDC, divisibilidade, backtracking, permutação, fusão, partição, pivô, monte, árvore em vetor, vetor de bits, estabilidade, vetor de ordem, strings, comparação de métodos, invariante, função de espalhamento, colisão, encadeamento, apontador, registro, passagem por referência, alocação dinâmica, union, nó cabeça, LIFO, notação pós-fixa, FIFO, fila circular, fila, lista de vizinhos, pilha, caminho mínimo, fila de prioridade
+  idx   c_* só entram em idx_conceitos (outros campos vazios) ; Autores: só 8 algs (02 04 05 06 15 16 17 18), 10 vazios ⇒ vazio = sem entrada ; idx_data = agrupar pelo texto, NÃO parsear número
+ARMADILHAS / PENDENTES
+  !2  18 Dijkstra: código sem o enunciado (não estava nos zips) ⇒ conferir c/ enunciado Aval1
+  !3  09 seleção direta: escrito do zero (zips sem código)
+  !4  17,18 podem sobrepor A5 ⇒ combinar quem mantém o texto
+  !5  REF: autor/ano/periódico CHECADOS na web (Kruskal Dijkstra Hoare Williams Floyd Moore Lee Tarjan Hopcroft Galler-Fischer) ; capítulos/seções CLRS Knuth Sedgewick K&R Brassard Wirth = memória, NÃO verificados ⇒ não inventar
+  !6  10 espalhamento: colisões medidas rodando o código: lista1(28) 14/7/2/2 ; lista2(32) 17/12/2/4 (fórmulas 1..4) ; comentário do .c do curso (14/5/2/2 e 17/12/4/3) está ERRADO
+  !7  bugs do código do curso (só p/ relatório): sem08_vetor_fila lê fila[-1] em remover() ; sem08_struct_lista_ligada_fila remove o ÚLTIMO (é pilha) ; _pilha c/ removeNo(cabeca->prox) não desliga o único nó
+VALIDAR (raiz do repo, precisa gcc)
+  python3 tools/lint.py   ⇒ esperado "PROBLEMAS lint: 0"
+  python3 tools/check.py  ⇒ compila (gcc -std=c99 -Wall -Wextra -fsanitize=address,undefined) e roda cada bloco C ; esperado "PROBLEMAS: 0" ; SHOW=1 mostra saída
+  A7: site = 18 p/ + 47 c/ + 6 idx_* + index.html + css/estilo.css ; 0 link quebrado ; HTML escapado ; saída idêntica em 2 execuções
+REGRAS  ∄ inventar fato/data/autor/número (dúvida ⇒ `(verif.)` ou vazio) ; API-CONGELADA e CLASSES-CSS do CTX valem ; só libc ; C99 ; 0 warnings
+        conflito: CTX manda em API/layout ; este arquivo manda em conteúdo/formato dos TXT
 --------------------------------------------------------------------------------------------------------------------------
 [A7] QA / INTEGRAÇÃO (após A1-A5)
 (colar junto com 00_CTX.txt)
