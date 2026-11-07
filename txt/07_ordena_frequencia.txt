@@ -1,0 +1,141 @@
+Tecnica: Método guloso (conforme cabeçalho do código)
+Algoritmo: Ordenação por frequência (contagem; base do Radix/LSD)
+Autores:
+Data:
+Conceitos: vetor de bits, estabilidade, complexidade
+Problema: Ordenar n inteiros que pertencem a um universo pequeno [0, U) sem fazer nenhuma comparação entre elementos, contando quantas vezes cada valor aparece.
+
+Ideia. Se sabemos que as chaves estão em [0, U), podemos usar a própria chave como índice de um vetor de contadores. O código trata esse vetor como um "vetor de bits" que representa o conjunto universo: o valor x está presente se a posição correspondente a x é diferente de zero (aqui, com o índice deslocado de 1: a frequência de x fica em vetFreqAcum[x+1]). Três passos:
+ 1. Computar a frequência de cada elemento: vetFreqAcum[x+1]++ para cada x do vetor. O(n).
+ 2. Acumular as frequências, somando cada uma à anterior (frequência acumulada anterior, FAA). Depois disso, vetFreqAcum[x] é o número de elementos menores que x, isto é, a posição onde deve ficar a primeira ocorrência de x no vetor ordenado.
+ 3. Percorrer o vetor original da esquerda para a direita colocando cada vet[i] na posição vetFreqAcum[vet[i]] de um vetor auxiliar e incrementando esse contador, de modo que a próxima ocorrência do mesmo valor vá para a posição seguinte. Ao final, copia-se o vetor auxiliar de volta.
+
+Estabilidade. Como o passo 3 percorre a entrada em ordem e o contador de cada chave só aumenta, dois elementos com a mesma chave saem na mesma ordem em que entraram: a ordenação é estável. Essa propriedade é essencial para o Radix Sort.
+
+Invariante do passo 3. Antes de tratar vet[i], para cada chave x, vetFreqAcum[x] é a posição de saída do próximo elemento de chave x, e as posições já preenchidas de vetAux contêm, ordenados e sem lacunas dentro de cada chave, os elementos de vet[0..i-1].
+
+Complexidade. Tempo Θ(n + U): uma passagem sobre os n elementos, uma sobre os U contadores, e de novo sobre os n elementos. Espaço extra Θ(n + U). Vale a pena quando U = O(n); se U é enorme (por exemplo, inteiros de 32 bits), o vetor de contadores é inviável, e aí entra o Radix Sort. Isso não contradiz o limite Ω(n log n) das ordenações por comparação, porque aqui não há comparações: o método explora a estrutura das chaves.
+
+Radix Sort LSD (least significant digit). Para chaves com vários dígitos (ou strings com vários caracteres), ordena-se por contagem, de modo estável, primeiro pelo dígito menos significativo, depois pelo seguinte, e assim por diante até o mais significativo. Por causa da estabilidade, ao ordenar pelo dígito d o desempate entre chaves iguais naquele dígito é dado pela ordem já obtida nos dígitos menos significativos. Com L dígitos em base b, o custo é Θ(L · (n + b)). O segundo trecho de código aplica a ideia a inteiros decimais; veja [[ordena_bolha_strings]] para a aplicação a nomes.
+
+Observação sobre a classificação. Classificar a contagem como "método guloso" segue o cabeçalho do código da disciplina; na literatura ela costuma ser apresentada como ordenação por distribuição, em tempo linear (veja CLRS, capítulo 8).
+
+<<C
+#include <stdio.h>
+#include <stdlib.h>
+
+void imprimeVetor(int V[], int n)
+{
+  int i;
+  for (i = 0; i < n; i++)
+    printf("%5d", V[i]);
+  printf("\n");
+}
+
+/* Ordena crescente vet[0..n-1], supondo que os elementos pertencem ao
+   universo 0..U-1. Estável. Devolve 0 se ok, -1 se faltou memória. */
+int ordenaPorFrequencia(int *vet, int n, int U)
+{
+  int ind, i;
+  int *vetFreqAcum, *vetAux;
+
+  if (n < 1)
+    return 0;
+  vetFreqAcum = malloc((size_t)(U + 1) * sizeof(int));  /* freq. de cada elemento */
+  vetAux = malloc((size_t)n * sizeof(int));             /* vetor de dados auxiliar */
+  if (vetFreqAcum == NULL || vetAux == NULL) {
+    free(vetFreqAcum);
+    free(vetAux);
+    return -1;
+  }
+
+  /* 1. frequência de cada elemento (deslocada de 1: a de x fica em x+1) */
+  for (i = 0; i <= U; i++)
+    vetFreqAcum[i] = 0;
+  for (i = 0; i < n; i++)
+    vetFreqAcum[vet[i] + 1]++;
+
+  /* 2. acumula: vetFreqAcum[x] passa a ser o nº de elementos menores que x */
+  for (i = 1; i <= U; i++)
+    vetFreqAcum[i] += vetFreqAcum[i-1];
+
+  /* 3. distribui, em ordem; a próxima ocorrência vai para a posição seguinte */
+  for (i = 0; i < n; i++) {
+    ind = vet[i];
+    vetAux[vetFreqAcum[ind]] = vet[i];
+    vetFreqAcum[ind]++;
+  }
+
+  for (i = 0; i < n; i++)            /* vetAux[0..n-1] está em ordem crescente */
+    vet[i] = vetAux[i];
+  free(vetFreqAcum);
+  free(vetAux);
+  return 0;
+}
+
+int main(void)
+{
+  int V[] = { 8, 8, 7, 1, 9, 3, 8, 9, 4, 2 }, tam = 10;
+
+  imprimeVetor(V, tam);
+  ordenaPorFrequencia(V, tam, 10);
+  imprimeVetor(V, tam);              /* 1 2 3 4 7 8 8 8 9 9 */
+  return 0;
+}
+C>>
+
+<<C
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+/* Ordenação por contagem, estável, pelo dígito decimal (v[i] / exp) % 10. */
+static void contaPorDigito(const int v[], int out[], int n, long exp)
+{
+    int c[11] = {0};
+
+    for (int i = 0; i < n; i++)
+        c[(v[i] / exp) % 10 + 1]++;
+    for (int d = 0; d < 10; d++)
+        c[d + 1] += c[d];
+    for (int i = 0; i < n; i++)
+        out[c[(v[i] / exp) % 10]++] = v[i];
+}
+
+/* Radix Sort LSD para inteiros não negativos. Devolve 0 se ok, -1 se erro. */
+int radixLSD(int v[], int n)
+{
+    if (n < 2)
+        return 0;
+    int max = v[0];
+    for (int i = 1; i < n; i++)
+        if (v[i] > max)
+            max = v[i];
+    int *tmp = malloc((size_t)n * sizeof *tmp);
+    if (tmp == NULL)
+        return -1;
+    for (long exp = 1; max / exp > 0; exp *= 10) {
+        contaPorDigito(v, tmp, n, exp);
+        memcpy(v, tmp, (size_t)n * sizeof *v);
+    }
+    free(tmp);
+    return 0;
+}
+
+int main(void)
+{
+    int v[] = {170, 45, 75, 90, 802, 24, 2, 66};
+    int n = sizeof v / sizeof v[0];
+
+    radixLSD(v, n);
+    for (int i = 0; i < n; i++)
+        printf("%d ", v[i]);             /* 2 24 45 66 75 90 170 802 */
+    printf("\n");
+    return 0;
+}
+C>>
+
+REF: CORMEN, Thomas H.; LEISERSON, Charles E.; RIVEST, Ronald L.; STEIN, Clifford. Introduction to Algorithms. 3. ed. Cambridge: MIT Press, 2009. (Capítulo 8, "Sorting in linear time": counting sort e radix sort.)
+REF: SEDGEWICK, Robert. Algorithms in C, Parts 1-4: Fundamentals, Data Structures, Sorting, Searching. 3. ed. Reading: Addison-Wesley, 1998. (Capítulo 10, "Radix sorting".)
+REF: FEOFILOFF, Paulo. Ordenação digital. In: Projeto de Algoritmos. IME-USP. Disponível em: https://www.ime.usp.br/~pf/algoritmos/aulas/radix.html
+REF: FEOFILOFF, Paulo. Algoritmos em linguagem C. Rio de Janeiro: Elsevier, 2009.

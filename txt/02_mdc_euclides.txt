@@ -1,0 +1,54 @@
+Tecnica: Redução/recursão
+Algoritmo: Algoritmo de Euclides (MDC)
+Autores: Euclides
+Data: c. 300 a.C. (Elementos, Livro VII)
+Conceitos: MDC, recursividade, divisibilidade
+Problema: Calcular o maior inteiro que divide, ao mesmo tempo, dois inteiros dados a e b (o máximo divisor comum).
+
+Ideia. Se a = q·b + r, com 0 ≤ r < b, então os divisores comuns de a e b são exatamente os divisores comuns de b e r. Logo mdc(a, b) = mdc(b, r), onde r = a mod b. Trocamos o problema por outro com números menores (redução) até que o segundo número seja zero; como todo número divide 0, mdc(a, 0) = a. Em sua forma original, nos Elementos, Euclides faz essa redução por subtrações sucessivas (Livro VII, proposições 1 e 2, e, para grandezas, Livro X, proposições 2 e 3); a divisão com resto apenas acelera o mesmo processo.
+
+Por que a redução é correta (prova curta). Seja d um divisor comum de a e b. Como r = a - q·b, d também divide r; portanto d divide b e r. Reciprocamente, se d divide b e r, então d divide a = q·b + r. Os dois conjuntos de divisores comuns são iguais, e em particular têm o mesmo maior elemento.
+
+Término. A cada chamada o segundo argumento passa de b para a mod b, que é estritamente menor que b e continua não negativo. Uma sequência de naturais estritamente decrescente é finita; ela só pára quando o segundo argumento vale 0, que é o caso-base. É um bom exemplo de [[recursividade]]: caso-base, redução e argumento de término.
+
+Complexidade. Cada duas chamadas fazem o segundo argumento cair pelo menos pela metade, de modo que o número de divisões é O(log min(a, b)). O pior caso ocorre quando a e b são números de Fibonacci consecutivos (teorema de Lamé, 1844). Compare com a tentativa de testar todos os candidatos de 1 até min(a, b), que custa O(min(a, b)).
+
+Cuidados. A função supõe a ≥ 0, b ≥ 0 e que os dois não são ambos nulos. Para aceitar números negativos, use o valor absoluto antes.
+
+<<C
+#include <stdio.h>
+
+/* Versão iterativa. Pré-condição: m, n >= 0 e não ambos nulos.
+   Invariante: mdc(m, n) tem o mesmo valor do início da chamada. */
+int mdc(int m, int n)
+{
+  int aux;
+  while (n != 0) {
+    aux = n;
+    n = m % n;
+    m = aux;
+  }
+  return m;
+}
+
+/* Versão recursiva: mdc(m, 0) = m ; mdc(m, n) = mdc(n, m mod n). */
+int mdc_rec(int m, int n)
+{
+  if (n == 0)
+    return m;
+  return mdc_rec(n, m % n);
+}
+
+int main(void)
+{
+  printf("%d\n", mdc(48, 18));        /* 6 */
+  printf("%d\n", mdc_rec(1071, 462)); /* 21 */
+  printf("%d\n", mdc(17, 5));         /* 1: primos entre si */
+  printf("%d\n", mdc(7, 0));          /* 7 */
+  return 0;
+}
+C>>
+
+REF: EUCLIDES. Elementos, Livro VII, proposições 1 e 2. In: HEATH, Thomas L. (trad.). The Thirteen Books of Euclid's Elements. 2. ed. Nova York: Dover, 1956. v. 2.
+REF: KNUTH, Donald E. The Art of Computer Programming, v. 2: Seminumerical Algorithms. 3. ed. Reading: Addison-Wesley, 1997. (Seção 4.5.2, Algoritmo E; análise na seção 4.5.3.)
+REF: CORMEN, Thomas H.; LEISERSON, Charles E.; RIVEST, Ronald L.; STEIN, Clifford. Introduction to Algorithms. 3. ed. Cambridge: MIT Press, 2009. (Seção 31.2, "Greatest common divisor".)

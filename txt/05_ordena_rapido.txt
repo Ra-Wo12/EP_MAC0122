@@ -1,0 +1,68 @@
+Tecnica: Divisão-e-conquista
+Algoritmo: Ordenação rápida (Quicksort)
+Autores: C. A. R. Hoare
+Data: 1961
+Conceitos: partição, pivô, complexidade, divisão-e-conquista
+Problema: Ordenar um vetor rearranjando-o no próprio lugar: escolhe-se um pivô, separam-se os menores dos maiores e ordenam-se recursivamente as duas partes.
+
+Ideia. A ordenação rápida inverte a lógica da [[ordena_fusao]]: o trabalho pesado fica na divisão, não na combinação. Escolhemos um elemento, o pivô p, e fazemos a partição de v[e..d] de modo que o pivô vá para sua posição definitiva q, com todos os elementos de v[e..q-1] menores ou iguais a p e todos os de v[q+1..d] maiores que p. Depois basta ordenar recursivamente v[e..q-1] e v[q+1..d]; não há nada a combinar.
+
+Esquema de partição usado aqui. Este código usa o esquema de Lomuto, em que o pivô é o último elemento, V[dir], e um único índice j varre o trecho da esquerda para a direita, enquanto i marca o início da região dos elementos maiores que o pivô. Ele não é o esquema original de Hoare (1961), no qual dois índices avançam em sentidos opostos e trocam elementos fora de lugar; o de Lomuto é mais simples de provar e é o mais usado em material didático, mas faz, em média, mais trocas.
+
+Invariante da partição. No início de cada iteração do laço (com j variando de esq a dir-1) vale: V[esq..i-1] contém elementos menores ou iguais ao pivô x; V[i..j-1] contém elementos maiores que x; e V[dir] = x. Se V[j] <= x, troca-se V[i] com V[j] e avança-se i, o que estende a primeira região; senão, V[j] já pertence à segunda região. Ao fim, trocar V[i] com V[dir] coloca o pivô entre as duas regiões, na sua posição definitiva i.
+
+Complexidade. A partição custa Θ(n). Se o pivô divide o vetor em partes de tamanhos balanceados, T(n) = 2·T(n/2) + Θ(n) = Θ(n log n); este também é o custo esperado para entradas aleatórias. Mas se a partição é sempre desbalanceada (por exemplo, vetor já ordenado com pivô = último), T(n) = T(n-1) + Θ(n) = Θ(n²): é o pior caso. Remédios comuns são escolher o pivô aleatoriamente ou como a mediana de três elementos. A profundidade da recursão também pode chegar a n no pior caso; recorrer primeiro à parte menor limita a pilha a O(log n). O espaço extra é O(1), fora a pilha, e o método não é estável.
+
+<<C
+#include <stdio.h>
+
+void imprime(int V[], int ini, int fim)
+{
+  int i;
+  for (i = ini; i <= fim; i++)
+    printf("%3d ", V[i]);
+  printf("\n");
+}
+
+void troque(int V[], int i, int j)
+{
+  int w = V[i];
+  V[i] = V[j];
+  V[j] = w;
+}
+
+void ordenaRapido(int V[], int esq, int dir)
+{
+  int i, j, x;
+  /* Particiona: menores ou iguais ao pivô para a esquerda, maiores para a direita */
+  x = V[dir];                        /* pivô: o último elemento */
+  i = esq;
+  for (j = esq; j < dir; j++) {
+    /* invariante: V[esq..i-1] <= x ; V[i..j-1] > x ; V[dir] == x */
+    if (V[j] <= x) {
+      troque(V, i, j);
+      i++;
+    }
+  }
+  troque(V, i, dir);                 /* pivô vai para a posição final i */
+  if (esq < i)
+    ordenaRapido(V, esq, i - 1);     /* ordena a parte esquerda */
+  if (i < dir)
+    ordenaRapido(V, i + 1, dir);     /* ordena a parte direita */
+}
+
+int main(void)
+{
+  int vet[] = { 99, 99, 80, 70, 60, 50, 40, 30, 20, 10, 83, 86, 77, 15, 93, 35, 86, 92, 49, 21 };
+  int n = 20;
+
+  imprime(vet, 0, n - 1);
+  ordenaRapido(vet, 0, n - 1);
+  imprime(vet, 0, n - 1);
+  return 0;
+}
+C>>
+
+REF: HOARE, C. A. R. Algorithm 64: Quicksort. Communications of the ACM, v. 4, n. 7, p. 321, jul. 1961.
+REF: CORMEN, Thomas H.; LEISERSON, Charles E.; RIVEST, Ronald L.; STEIN, Clifford. Introduction to Algorithms. 3. ed. Cambridge: MIT Press, 2009. (Capítulo 7, "Quicksort".)
+REF: BENTLEY, Jon. Programming Pearls. 2. ed. Reading: Addison-Wesley, 1999. (Coluna 11, "Sorting"; apresenta o esquema de partição atribuído a N. Lomuto.)

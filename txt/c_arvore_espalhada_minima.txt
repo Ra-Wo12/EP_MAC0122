@@ -1,0 +1,13 @@
+Tecnica:
+Algoritmo:
+Autores:
+Data:
+Conceitos: árvore espalhada mínima
+Problema:
+
+Dado um grafo não orientado, conexo e com custos nas arestas, uma árvore espalhada (geradora) é uma árvore formada por arestas do grafo que contém todos os vértices. A árvore espalhada mínima (em inglês, MST) é a de menor custo total, isto é, a que minimiza a soma dos custos de suas n-1 arestas. Ela responde a perguntas como "qual é a rede de menor custo que liga todas as cidades?". Pode haver mais de uma árvore mínima; se todos os custos são distintos, ela é única.
+
+Uma propriedade central é a do corte: para qualquer partição dos vértices em dois grupos, uma aresta de menor custo entre as que ligam os dois grupos pertence a alguma árvore espalhada mínima. É nela que se apoia a correção dos algoritmos gulosos para o problema, como o de [[kruskal]], que examina as arestas em ordem crescente de custo e usa [[union_find]] para evitar ciclos. Em grafos desconexos, obtém-se uma floresta espalhada mínima.
+
+REF: CORMEN, Thomas H.; LEISERSON, Charles E.; RIVEST, Ronald L.; STEIN, Clifford. Introduction to Algorithms. 3. ed. Cambridge: MIT Press, 2009. (Capítulo 23, "Minimum spanning trees".)
+REF: GRAHAM, R. L.; HELL, Pavol. On the history of the minimum spanning tree problem. Annals of the History of Computing, v. 7, n. 1, p. 43-57, 1985.

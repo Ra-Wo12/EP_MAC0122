@@ -1,0 +1,13 @@
+Tecnica:
+Algoritmo:
+Autores:
+Data:
+Conceitos: árvore
+Problema:
+
+Uma árvore (livre) é um grafo conexo e sem ciclos. Propriedades equivalentes: entre dois vértices quaisquer há exatamente um caminho; com n vértices, tem exatamente n-1 arestas; remover qualquer aresta a desconecta e acrescentar uma aresta cria um ciclo. Uma árvore com raiz escolhida distingue pai e filhos; folhas são vértices sem filhos. Em uma árvore binária cada nó tem no máximo dois filhos (esquerdo e direito).
+
+Árvores aparecem em hierarquias (diretórios, expressões, árvores de recursão) e como resultado de algoritmos: a busca em largura e a busca em profundidade produzem árvores de busca (o vetor pai descreve a árvore). Uma árvore binária quase completa cabe num vetor, sem apontadores, e é a base do [[ordena_monte]]: os filhos de v[i] ficam em v[2i+1] e v[2i+2]. Uma árvore que liga todos os vértices de um grafo é uma árvore espalhada; a de menor custo total é calculada por [[kruskal]].
+
+REF: CORMEN, Thomas H.; LEISERSON, Charles E.; RIVEST, Ronald L.; STEIN, Clifford. Introduction to Algorithms. 3. ed. Cambridge: MIT Press, 2009. (Apêndice B.5, "Trees".)
+REF: KNUTH, Donald E. The Art of Computer Programming, v. 1: Fundamental Algorithms. 3. ed. Reading: Addison-Wesley, 1997. (Seção 2.3, "Trees".)

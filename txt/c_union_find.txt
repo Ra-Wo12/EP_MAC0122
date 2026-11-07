@@ -1,0 +1,14 @@
+Tecnica:
+Algoritmo:
+Autores:
+Data:
+Conceitos: union-find
+Problema:
+
+A estrutura union-find (ou de conjuntos disjuntos) mantém uma coleção de conjuntos disjuntos de elementos e oferece duas operações: acha(x), que devolve o representante (o "chefe") do conjunto que contém x, e une(a, b), que junta os conjuntos de a e b. Dois elementos estão no mesmo conjunto se e somente se têm o mesmo representante.
+
+Implementação usual: cada conjunto é uma árvore em que cada elemento aponta para seu pai, guardado num vetor pai[]; a raiz aponta para si mesma e é o representante. acha sobe até a raiz. Duas melhorias tornam as operações quase constantes: união por tamanho (a raiz da árvore menor passa a apontar para a da maior) e compressão de caminho (durante acha, os elementos visitados passam a apontar mais perto da raiz). Com ambas, uma sequência de m operações sobre n elementos custa O(m α(n)), onde α é a inversa da função de Ackermann, que na prática não passa de 4. O uso clássico é o [[kruskal]]: testar, em tempo quase constante, se uma aresta liga duas componentes diferentes, ou seja, se formaria um ciclo.
+
+REF: CORMEN, Thomas H.; LEISERSON, Charles E.; RIVEST, Ronald L.; STEIN, Clifford. Introduction to Algorithms. 3. ed. Cambridge: MIT Press, 2009. (Capítulo 21, "Data structures for disjoint sets".)
+REF: GALLER, Bernard A.; FISCHER, Michael J. An improved equivalence algorithm. Communications of the ACM, v. 7, n. 5, p. 301-303, 1964.
+REF: TARJAN, Robert E. Efficiency of a good but not linear set union algorithm. Journal of the ACM, v. 22, n. 2, p. 215-225, 1975.

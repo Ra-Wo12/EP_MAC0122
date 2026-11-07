@@ -1,0 +1,145 @@
+Tecnica: Comparação-troca
+Algoritmo: Ordenação bolha c/ vetor de ordem
+Autores:
+Data:
+Conceitos: vetor de ordem, strings, comparação de métodos
+Problema: Ordenar uma lista de nomes (strings) sem mover as strings na memória, usando um vetor auxiliar de índices que registra a ordem, e comparar o custo disso com trocar as strings de lugar e com a ordenação por frequência.
+
+Ideia da bolha. Compara-se pares de vizinhos e trocam-se os que estão fora de ordem. A variante usada no curso faz o seguinte: para i = 1, 2, ..., n-1, o elemento da posição i é comparado com o seu vizinho da esquerda e trocado com ele, e assim sucessivamente (j de i até 1), enquanto estiver fora de ordem; depois da iteração i, as posições 0..i estão em ordem. Em outras palavras, o novo elemento "borbulha" para a esquerda até o lugar certo. Note que esta variante é equivalente à inserção direta feita por trocas de vizinhos; como o laço interno não pára antes da hora, ela sempre faz n(n-1)/2 comparações.
+
+Vetor de ordem. Em vez de trocar as strings de lugar, criamos um vetor ord[0..n-1], inicialmente ord[i] = i (a ordem identidade), e comparamos as strings vetStr[ord[j-1]] e vetStr[ord[j]]. Quando uma troca é necessária, trocamos apenas os dois inteiros ord[j-1] e ord[j]. Ao final, ord[0] é o índice do menor nome, ord[1] o do segundo, e assim por diante: para percorrer os nomes em ordem, imprime-se vetStr[ord[i]] para i = 0, 1, ... O vetor original fica intacto, o que também permite manter várias ordens ao mesmo tempo (por nome, por idade etc.).
+
+Invariante. Depois da iteração i do laço externo, vetStr[ord[0]], ..., vetStr[ord[i]] estão em ordem crescente e ord[0..i] é uma permutação de 0..i. A iteração i+1 insere ord[i+1] nessa sequência ordenada por trocas sucessivas com o vizinho da esquerda.
+
+Terceiro método: frequência (Radix LSD) com vetor de ordem. O mesmo vetor de ordem funciona com a ordenação por frequência de [[ordena_frequencia]], aplicada a cada caractere dos nomes, do último para o primeiro, de modo estável: a cada passo, a contagem dos caracteres da coluna jj produz um novo vetor de ordem a partir do anterior, sem mover as strings. Para isso o código supõe que os nomes usam apenas as letras de a a z (minúsculas) e o espaço, e que foram uniformizados: todos com o mesmo comprimento, completados com brancos à direita. O universo tem 27 símbolos (branco e as 26 letras); com L caracteres por nome, o custo é Θ(L · (n + 27)).
+
+Complexidade e comparação de métodos. A bolha faz Θ(n²) comparações de strings, cada uma custando até O(L) com strcmp; a frequência faz Θ(L · (n + U)), linear em n. O número de comparações e de trocas é o mesmo nas duas versões da bolha. A diferença está no custo de cada troca: trocar duas strings exige três cópias (strcpy com um buffer auxiliar), enquanto trocar dois índices exige três cópias de um int. Medições do material da disciplina (processador AMD Ryzen 5 8500G, tempos em segundos), para listas de n nomes:
+ - n = 1904: frequência 0,001002; bolha com vetor de ordem 0,009949; bolha trocando as strings 0,019258.
+ - n = 3026: frequência 0,001399; bolha com vetor de ordem 0,026519; bolha trocando as strings 0,057001.
+ - n = 6052: frequência 0,002394; bolha com vetor de ordem 0,092636; bolha trocando as strings 0,186895.
+O vetor de ordem torna a bolha cerca de duas vezes mais rápida nesses testes, mas o crescimento continua quadrático (dobrar n multiplica por mais de 3 o tempo da bolha), enquanto a frequência cresce de modo aproximadamente linear. A ordenação por frequência é estável (veja o exercício proposto no próprio código: prove a estabilidade); a bolha com troca só de vizinhos estritamente fora de ordem também é.
+
+Para n grande, os métodos O(n log n) ([[ordena_fusao]], [[ordena_rapido]]) são os mais indicados quando as chaves não têm estrutura que permita contar; o vetor de ordem funciona com qualquer um deles.
+
+<<C
+#include <stdio.h>
+#include <string.h>
+
+#define MAXN 100                     /* máximo de nomes */
+#define TAM   32                     /* tamanho máximo de cada nome (com o '\0') */
+#define U     27                     /* universo: ' ' e 'a'..'z' */
+
+/* Índice do caractere no universo: ' ' -> 0 ; 'a' -> 1 ; ... ; 'z' -> 26 */
+static int pegaIndice(char c)
+{
+  return (c == ' ') ? 0 : c - 'a' + 1;
+}
+
+/* Completa a string com brancos à direita até ter tamLnh caracteres. */
+void uniformiza(char s[], int tamLnh)
+{
+  int i;
+  for (i = (int)strlen(s); i < tamLnh; i++)
+    s[i] = ' ';
+  s[tamLnh] = '\0';
+}
+
+/* ---- Bolha com vetor de ordem: as strings não saem do lugar ---- */
+void trocaEmVetorOrd(int vetOrdem[], int i, int j)
+{
+  int aux = vetOrdem[i];
+  vetOrdem[i] = vetOrdem[j];
+  vetOrdem[j] = aux;
+}
+
+void ordenaBolhaOrdem(char vetStr[][TAM], int ord[], int n)
+{
+  int i, j;
+  for (i = 0; i < n; i++)
+    ord[i] = i;                      /* a ordem inicial é a identidade */
+  for (i = 1; i < n; i++)
+    for (j = i; j > 0; j--)
+      if (strcmp(vetStr[ord[j-1]], vetStr[ord[j]]) > 0)
+        trocaEmVetorOrd(ord, j, j - 1);
+}
+
+/* ---- Bolha trocando as strings ---- */
+void trocaEmVetor(char vetStr[][TAM], int i, int j)
+{
+  char aux[TAM];                     /* cada cópia de string é um laço */
+  strcpy(aux, vetStr[i]);
+  strcpy(vetStr[i], vetStr[j]);
+  strcpy(vetStr[j], aux);
+}
+
+void ordenaBolha(char vetStr[][TAM], int n)
+{
+  int i, j;
+  for (i = 1; i < n; i++)
+    for (j = i; j > 0; j--)
+      if (strcmp(vetStr[j-1], vetStr[j]) > 0)
+        trocaEmVetor(vetStr, j, j - 1);
+}
+
+/* ---- Frequência (Radix LSD, estável) com vetor de ordem ----
+   Pré-condição: nomes uniformizados (todos com tamLnh caracteres). */
+void ordenaPorFrequencia(char vetStr[][TAM], int vetOrdem[], int tamLnh, int n)
+{
+  int vetFreqAcum[U + 1], vetOrd1[MAXN];
+  int jj, i, ind;
+
+  for (i = 0; i < n; i++)
+    vetOrdem[i] = i;
+  for (jj = tamLnh - 1; jj >= 0; jj--) {          /* do último caractere ao primeiro */
+    for (i = 0; i <= U; i++)
+      vetFreqAcum[i] = 0;
+    for (i = 0; i < n; i++) {                     /* 1. frequências (deslocadas de 1) */
+      ind = pegaIndice(vetStr[vetOrdem[i]][jj]);
+      vetFreqAcum[ind + 1]++;
+    }
+    for (i = 1; i <= U; i++)                      /* 2. acumula */
+      vetFreqAcum[i] += vetFreqAcum[i-1];
+    for (i = 0; i < n; i++) {                     /* 3. distribui, respeitando a ordem atual */
+      ind = pegaIndice(vetStr[vetOrdem[i]][jj]);
+      vetOrd1[vetFreqAcum[ind]++] = vetOrdem[i];
+    }
+    for (i = 0; i < n; i++)                       /* nova ordem */
+      vetOrdem[i] = vetOrd1[i];
+  }
+}
+
+void imprimeVetor(char vetStr[][TAM], int ord[], int n)
+{
+  int i;
+  for (i = 0; i < n; i++)
+    printf(" %3d : |%s|\n", i, vetStr[ord[i]]);
+}
+
+int main(void)
+{
+  char *dados[] = { "marta", "ana", "zeca", "bia", "carlos", "ana maria" };
+  char a[MAXN][TAM], b[MAXN][TAM];
+  int ordA[MAXN], ordF[MAXN];
+  int n = 6, i, max = 9;             /* max = comprimento do maior nome */
+
+  for (i = 0; i < n; i++) {
+    strcpy(a[i], dados[i]);
+    uniformiza(a[i], max);
+    strcpy(b[i], a[i]);
+  }
+  ordenaBolhaOrdem(a, ordA, n);      /* a[] não é alterado */
+  ordenaPorFrequencia(a, ordF, max, n);
+  ordenaBolha(b, n);                 /* b[] é rearranjado */
+
+  imprimeVetor(a, ordA, n);
+  for (i = 0; i < n; i++)            /* os três métodos concordam? */
+    if (ordA[i] != ordF[i] || strcmp(a[ordA[i]], b[i]) != 0)
+      printf("diferença em %d\n", i);
+  return 0;
+}
+C>>
+
+REF: KNUTH, Donald E. The Art of Computer Programming, v. 3: Sorting and Searching. 2. ed. Reading: Addison-Wesley, 1998. (Seção 5.2.1, "Sorting by insertion", e seção 5.2.5, "Sorting by distribution", incluem a ordenação por inserção e a por distribuição; tabelas de endereços são discutidas na introdução da seção 5.2.)
+REF: SEDGEWICK, Robert. Algorithms in C, Parts 1-4: Fundamentals, Data Structures, Sorting, Searching. 3. ed. Reading: Addison-Wesley, 1998. (Capítulo 10, "Radix sorting".)
+REF: FEOFILOFF, Paulo. Ordenação digital. In: Projeto de Algoritmos. IME-USP. Disponível em: https://www.ime.usp.br/~pf/algoritmos/aulas/radix.html
+REF: CORMEN, Thomas H.; LEISERSON, Charles E.; RIVEST, Ronald L.; STEIN, Clifford. Introduction to Algorithms. 3. ed. Cambridge: MIT Press, 2009. (Seções 2.1 e 8.3.)

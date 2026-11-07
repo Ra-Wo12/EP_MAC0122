@@ -1,0 +1,75 @@
+Tecnica: Estrutura de dados (monte)
+Algoritmo: Ordenação por monte (Heap Sort)
+Autores: J. W. J. Williams
+Data: 1964
+Conceitos: monte, árvore em vetor, complexidade, vetor
+Problema: Ordenar um vetor no próprio lugar, em tempo O(n log n), usando um monte (heap) para retirar sempre o maior elemento restante.
+
+Ideia. Um monte máximo é uma árvore binária quase completa em que cada nó é maior ou igual a seus filhos; o maior elemento está na raiz. Essa árvore cabe num vetor, sem apontadores: com índices a partir de 0, os filhos de v[i] são v[2i+1] e v[2i+2], e o pai de v[i] é v[(i-1)/2]. A ordenação tem duas fases: (1) transformar o vetor num monte máximo; (2) repetir: trocar a raiz v[0] (o maior) com o último elemento do monte, diminuir o monte em uma posição e restaurar a propriedade de monte com a operação desceElementoMonte, que faz o elemento da raiz descer até o lugar certo, trocando-o sempre com o maior dos filhos.
+
+Construção do monte. Aplica-se desceElementoMonte aos nós internos de baixo para cima, de i = n/2 - 1 até 0 (os nós de índice ≥ n/2 são folhas e já são montes). Quando desceElementoMonte(V, i, N) é chamada, as subárvores dos dois filhos já são montes, e a operação conserta o nó i.
+
+Invariante da fase 2. Antes de cada iteração com m = tamanho do monte - 1: v[0..m] é um monte máximo e v[m+1..n-1] contém, em ordem crescente, os n-m-1 maiores elementos do vetor, todos maiores ou iguais aos elementos de v[0..m]. Trocar v[0] com v[m] leva o maior de v[0..m] para sua posição final; desceElementoMonte restaura o monte em v[0..m-1].
+
+Complexidade. desceElementoMonte desce no máximo a altura do monte, ⌊log₂ n⌋, logo custa O(log n). A fase 2 faz n-1 chamadas: O(n log n). A construção do monte, embora faça cerca de n/2 chamadas, custa apenas O(n), pois a maioria dos nós está perto das folhas e desce pouco (esta construção de baixo para cima é de R. W. Floyd, 1964). Total: O(n log n) no melhor, médio e pior caso, com espaço extra O(1). A ordenação não é estável. Em comparação com [[ordena_rapido]], o Heap Sort tem pior caso garantido O(n log n), mas costuma ser mais lento na prática por acessar a memória de forma menos local.
+
+<<C
+#include <stdio.h>
+
+void imprime(int V[], int n)
+{
+  int i;
+  for (i = 0; i < n; i++)
+    printf("%3d ", V[i]);
+  printf("\n");
+}
+
+void troque(int V[], int i, int j)
+{
+  int w = V[i];
+  V[i] = V[j];
+  V[j] = w;
+}
+
+/* Supondo que V[0..N-1] tem a propriedade de Monte exceto talvez em V[k],
+   "desce" V[k], trocando-o com o maior filho, até que fique maior ou igual
+   aos dois filhos: a propriedade de Monte é restaurada. */
+void desceElementoMonte(int V[], int k, int N)
+{
+  int j;
+  while (2 * k + 1 < N) {            /* tem algum filho? */
+    j = 2 * k + 1;                   /* primeiro filho de k */
+    if (j < N - 1 && V[j] < V[j+1])
+      j++;                           /* tem 2 filhos e o maior é o de j+1 */
+    if (V[k] >= V[j])
+      break;
+    troque(V, k, j);
+    k = j;                           /* recomeça com o "maior filho" */
+  }
+}
+
+void ordena_via_monte(int V[], int tam)
+{
+  int k, N = tam;
+  for (k = N / 2 - 1; k >= 0; k--)   /* cria a propriedade de Monte */
+    desceElementoMonte(V, k, N);     /* começa pelo primeiro nó que tem filho */
+  while (N > 0) {
+    troque(V, 0, N - 1);             /* o maior (topo) vai para a última posição */
+    desceElementoMonte(V, 0, --N);   /* restaura o Monte em V[0..N-1] */
+  }
+}
+
+int main(void)
+{
+  int vet[] = { 83, 86, 77, 15, 93, 35, 86, 92, 49, 21 }, n = 10;
+
+  imprime(vet, n);
+  ordena_via_monte(vet, n);
+  imprime(vet, n);                   /* 15 21 35 49 77 83 86 86 92 93 */
+  return 0;
+}
+C>>
+
+REF: WILLIAMS, J. W. J. Algorithm 232: Heapsort. Communications of the ACM, v. 7, n. 6, p. 347-348, jun. 1964.
+REF: FLOYD, Robert W. Algorithm 245: Treesort 3. Communications of the ACM, v. 7, n. 12, p. 701, dez. 1964.
+REF: CORMEN, Thomas H.; LEISERSON, Charles E.; RIVEST, Ronald L.; STEIN, Clifford. Introduction to Algorithms. 3. ed. Cambridge: MIT Press, 2009. (Capítulo 6, "Heapsort".)

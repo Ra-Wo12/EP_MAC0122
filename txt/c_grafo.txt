@@ -1,0 +1,16 @@
+Tecnica:
+Algoritmo:
+Autores:
+Data:
+Conceitos: grafo
+Problema:
+
+Um grafo G = (V, E) é formado por um conjunto V de vértices (ou nós) e um conjunto E de arestas, cada uma ligando dois vértices. Em um grafo não orientado a aresta {u, v} não tem sentido; em um grafo orientado ela é um arco (u, v) que vai de u para v. Quando as arestas têm um número associado (custo, distância, capacidade), o grafo é valorado, ou com pesos. Dois vértices ligados por uma aresta são vizinhos (adjacentes); um caminho é uma sequência de vértices em que cada par consecutivo é vizinho; o grafo é conexo se existe caminho entre quaisquer dois vértices.
+
+Grafos modelam redes de estradas, de computadores, relações entre pessoas, dependências entre tarefas. Com n vértices e m arestas, há duas representações usuais: a matriz de adjacência (n × n, espaço Θ(n²), teste de aresta em O(1)) e as listas de vizinhos (uma lista ligada por vértice, espaço Θ(n + m), melhor para grafos esparsos).
+
+Algoritmos do site que usam grafos: [[busca_largura]], [[busca_profundidade]], [[kruskal]] e [[dijkstra]].
+
+REF: CORMEN, Thomas H.; LEISERSON, Charles E.; RIVEST, Ronald L.; STEIN, Clifford. Introduction to Algorithms. 3. ed. Cambridge: MIT Press, 2009. (Apêndice B.4, "Graphs"; capítulo 22.)
+REF: FEOFILOFF, Paulo; KOHAYAKAWA, Yoshiharu; WAKABAYASHI, Yoshiko. Uma introdução sucinta à teoria dos grafos. IME-USP.
+REF: SZWARCFITER, Jayme L. Grafos e algoritmos computacionais. Rio de Janeiro: Campus, 1984.

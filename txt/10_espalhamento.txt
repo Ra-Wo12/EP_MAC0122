@@ -1,0 +1,215 @@
+Tecnica: Espalhamento (hashing)
+Algoritmo: Tabela de espalhamento p/ palavras reservadas de C
+Autores:
+Data:
+Conceitos: função de espalhamento, colisão, encadeamento, espalhamento
+Problema: Decidir rapidamente se uma palavra é reservada na linguagem C, guardando as palavras numa tabela em que a posição de cada uma é calculada a partir dela mesma.
+
+Ideia. Uma busca sequencial entre as 32 palavras reservadas de C custa até 32 comparações de strings por consulta; a busca binária ([[busca_binaria]]) custa cerca de 5, mas exige manter a lista ordenada. O espalhamento (hashing) vai além: uma função de espalhamento h transforma a palavra num índice h(s) em [0, M) de uma tabela, e a palavra é guardada (e procurada) diretamente nessa posição, em tempo esperado O(1) em relação ao número de palavras.
+
+Função de espalhamento. Uma boa função (1) é barata de calcular, (2) depende de todos (ou de muitos) caracteres e (3) distribui as chaves de modo uniforme pelas M posições. O exercício da disciplina compara quatro fórmulas, todas terminando com o resto da divisão por M = 487:
+ - fórmula 1: usa apenas o primeiro caractere, p[0];
+ - fórmula 2: usa os dois primeiros, 2·p[0] + p[1] + p[1];
+ - fórmula 3: usa até três, 3·p[0] + 2·p[1] + p[2] (para palavras de até 2 caracteres, cai na fórmula 2);
+ - fórmula 4: usa até quatro, 4·p[0] + 3·p[1] + 2·p[2] + p[3] (para palavras menores, cai nas anteriores).
+Os pesos decrescentes fazem a ordem dos caracteres importar. Toda função de espalhamento tem de devolver um valor em todos os caminhos de execução; um return sem valor, ou a falta dele, dá comportamento indefinido.
+
+Colisões. Como há mais chaves possíveis do que posições, duas palavras diferentes podem cair na mesma posição: é uma colisão. O primeiro trecho de código conta as colisões como o número de palavras cuja posição já estava ocupada na hora da inserção. Resultados (medidos executando o código) para duas listas de palavras:
+ - lista 1 (28 palavras do arquivo palavra_reservadas_c.txt, que mistura palavras reservadas e nomes frequentes como main, printf, scanf, include e define): fórmulas 1 a 4 produzem 14, 7, 2 e 2 colisões;
+ - lista 2 (as 32 palavras reservadas do C90, do arquivo palavra_reservadas_lista2.txt): 17, 12, 2 e 4 colisões.
+Usar só a primeira letra (fórmula 1) é péssimo: muitas palavras começam com a mesma letra. Considerar mais caracteres melhora bastante, mas não de forma garantida: da fórmula 3 para a 4 não houve ganho na lista 1 e houve piora na lista 2.
+
+Encadeamento. A forma mais simples de tratar colisões é o encadeamento: cada posição da tabela guarda o início de uma lista ligada com as palavras que lá caíram. Para inserir, calcula-se h(s) e coloca-se a palavra no início da lista; para buscar, calcula-se h(s) e percorre-se somente essa lista. O segundo trecho de código implementa isso e conta as colisões como a soma de (tamanho da lista - 1) sobre as posições com mais de um elemento. Ele usa a fórmula (9·tamanho + 16·primeiro + 19·último) mod 60, que apareceu num trabalho de aluno (anonimizado) e serve de exemplo de função que combina o primeiro caractere, o último e o comprimento da palavra: com ela as 32 palavras reservadas caem em posições todas distintas (zero colisões), enquanto só a primeira letra, com o mesmo M, produz várias. O código mostra também a busca, que percorre apenas a lista de uma posição.
+
+Busca exaustiva de parâmetros. Para um conjunto fixo de palavras, é possível procurar por força bruta os coeficientes a, b, c e o tamanho M de uma fórmula (a·primeiro + b·último + c·tamanho) mod M. Um outro trabalho de aluno fez isso, para M de 32 a 80, e encontrou que M = 60, a = 4, b = 1, c = 51 espalha as 32 palavras reservadas sem nenhuma colisão (função de espalhamento perfeita para esse conjunto, não para palavras quaisquer).
+
+Complexidade. Com n chaves e M posições, o tamanho médio de uma lista é α = n/M (fator de carga). Sob a hipótese de espalhamento uniforme, inserção e busca custam Θ(1 + α) em média; no pior caso, em que todas as chaves caem na mesma posição, custam Θ(n). A tabela ocupa Θ(M + n). Manter α pequeno mantém as listas curtas.
+
+<<C
+#include <stdio.h>
+#include <string.h>
+
+#define MAX 487                      /* tamanho da tabela */
+
+/* lista 1: 28 palavras */
+char *lista1[] = {
+  "break", "case", "char", "continue", "default", "define", "do", "double",
+  "else", "float", "for", "fprintf", "fscanf", "if", "include", "int",
+  "long", "main", "printf", "return", "scanf", "short", "sizeof", "struct",
+  "switch", "union", "void", "while"
+};
+
+/* lista 2: 32 palavras reservadas do C90 */
+char *lista2[] = {
+  "auto", "break", "case", "char", "const", "continue", "default", "do",
+  "double", "else", "enum", "extern", "float", "for", "goto", "if",
+  "int", "long", "register", "return", "short", "signed", "sizeof",
+  "static", "struct", "switch", "typedef", "union", "unsigned", "void",
+  "volatile", "while"
+};
+
+/* Devolve o valor de espalhamento (posição na tabela) da palavra. */
+int espalha(int formula, char *palavra)
+{
+  int tam = (int)strlen(palavra);
+
+  if (formula == 1)                  /* usa apenas o 1o caractere */
+    return palavra[0] % MAX;
+  if (formula == 2 || tam <= 2)      /* usa os 2 primeiros caracteres */
+    return (2 * palavra[0] + palavra[1] + palavra[1]) % MAX;
+  if (formula == 3 || tam == 3)      /* usa até 3 caracteres */
+    return (3 * palavra[0] + 2 * palavra[1] + palavra[2]) % MAX;
+  return (4 * palavra[0] + 3 * palavra[1] + 2 * palavra[2] + palavra[3]) % MAX;
+}
+
+/* Conta colisões: palavras cuja posição já estava ocupada ao inserir. */
+int contaColisoes(int formula, char *palavras[], int n)
+{
+  char ocupada[MAX] = {0};
+  int i, posicao, colisoes = 0;
+
+  for (i = 0; i < n; i++) {
+    posicao = espalha(formula, palavras[i]);
+    if (ocupada[posicao])
+      colisoes++;
+    else
+      ocupada[posicao] = 1;
+  }
+  return colisoes;
+}
+
+int main(void)
+{
+  int f;
+
+  printf("formula | lista1 | lista2\n");
+  for (f = 1; f <= 4; f++)
+    printf("%7d | %6d | %6d\n", f,
+           contaColisoes(f, lista1, 28),
+           contaColisoes(f, lista2, 32));
+  /* 1: 14 17 ; 2: 7 12 ; 3: 2 2 ; 4: 2 4 */
+  return 0;
+}
+C>>
+
+<<C
+#include <stdio.h>
+#include <stdlib.h>
+
+#define NPALAVRAS 32
+#define MAX       60                 /* tamanho da tabela */
+
+typedef struct TipoNo {
+  char *palavra;
+  struct TipoNo *prox;
+} TipoNo;
+
+typedef int (*FuncEsp)(char *);      /* tipo: função de espalhamento */
+
+/* Combina comprimento, primeiro e último caracteres. */
+int espalh(char *palavra)
+{
+  int tamanho = 0, primeiro = palavra[0], ultimo;
+  while (palavra[tamanho] != '\0')
+    tamanho++;
+  ultimo = palavra[tamanho - 1];
+  return (9 * tamanho + 16 * primeiro + 19 * ultimo) % MAX;   /* sempre devolve valor */
+}
+
+/* Só o primeiro caractere (para comparar). */
+int espalhaPrimeiro(char *palavra)
+{
+  return palavra[0] % MAX;
+}
+
+/* Insere no início da lista da posição. */
+void insere_lista(TipoNo **inicio, char *palavra)
+{
+  TipoNo *no = malloc(sizeof(TipoNo));
+  if (no == NULL)
+    exit(EXIT_FAILURE);
+  no->palavra = palavra;
+  no->prox = *inicio;
+  *inicio = no;
+}
+
+void monta_tabela(TipoNo *tabela[], char *palavras[], int n, FuncEsp h)
+{
+  int i;
+  for (i = 0; i < MAX; i++)
+    tabela[i] = NULL;
+  for (i = 0; i < n; i++)
+    insere_lista(&tabela[h(palavras[i])], palavras[i]);
+}
+
+/* Busca: percorre só a lista da posição h(palavra). Devolve 1 se achou. */
+int busca(TipoNo *tabela[], char *palavra, FuncEsp h)
+{
+  TipoNo *p;
+  for (p = tabela[h(palavra)]; p != NULL; p = p->prox) {
+    char *a = p->palavra, *b = palavra;
+    while (*a != '\0' && *a == *b) {
+      a++;
+      b++;
+    }
+    if (*a == *b)
+      return 1;
+  }
+  return 0;
+}
+
+/* Colisões = soma de (tamanho da lista - 1) nas posições com mais de 1 elemento. */
+int conta_colisoes(TipoNo *tabela[])
+{
+  int i, qtd, colisoes = 0;
+  TipoNo *aux;
+  for (i = 0; i < MAX; i++) {
+    qtd = 0;
+    for (aux = tabela[i]; aux != NULL; aux = aux->prox)
+      qtd++;
+    if (qtd > 1)
+      colisoes += qtd - 1;
+  }
+  return colisoes;
+}
+
+void libera_tabela(TipoNo *tabela[])
+{
+  int i;
+  for (i = 0; i < MAX; i++)
+    while (tabela[i] != NULL) {
+      TipoNo *p = tabela[i];
+      tabela[i] = p->prox;
+      free(p);
+    }
+}
+
+int main(void)
+{
+  TipoNo *tabela[MAX];
+  char *palavrasreservadas[NPALAVRAS] = {
+    "auto", "break", "case", "char", "const", "continue",
+    "default", "do", "double", "else", "enum", "extern",
+    "float", "for", "goto", "if", "int", "long",
+    "register", "return", "short", "signed", "sizeof",
+    "static", "struct", "switch", "typedef", "union",
+    "unsigned", "void", "volatile", "while"
+  };
+
+  monta_tabela(tabela, palavrasreservadas, NPALAVRAS, espalh);
+  printf("espalh:          %d colisoes\n", conta_colisoes(tabela));     /* 0 */
+  printf("busca(while)=%d busca(main)=%d\n",
+         busca(tabela, "while", espalh), busca(tabela, "main", espalh));  /* 1 0 */
+  libera_tabela(tabela);
+
+  monta_tabela(tabela, palavrasreservadas, NPALAVRAS, espalhaPrimeiro);
+  printf("espalhaPrimeiro: %d colisoes\n", conta_colisoes(tabela));
+  libera_tabela(tabela);
+  return 0;
+}
+C>>
+
+REF: KERNIGHAN, Brian W.; RITCHIE, Dennis M. The C Programming Language. 2. ed. Englewood Cliffs: Prentice Hall, 1988. (Seção 6.6, "Table lookup", implementa uma tabela de espalhamento com encadeamento.)
+REF: CORMEN, Thomas H.; LEISERSON, Charles E.; RIVEST, Ronald L.; STEIN, Clifford. Introduction to Algorithms. 3. ed. Cambridge: MIT Press, 2009. (Capítulo 11, "Hash tables".)
+REF: KNUTH, Donald E. The Art of Computer Programming, v. 3: Sorting and Searching. 2. ed. Reading: Addison-Wesley, 1998. (Seção 6.4, "Hashing".)
+REF: SEDGEWICK, Robert. Algorithms in C, Parts 1-4: Fundamentals, Data Structures, Sorting, Searching. 3. ed. Reading: Addison-Wesley, 1998. (Capítulo 14, "Hashing".)

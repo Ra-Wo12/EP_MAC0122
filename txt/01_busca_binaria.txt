@@ -1,0 +1,78 @@
+Tecnica: Divisão-e-conquista
+Algoritmo: Busca binária
+Autores:
+Data:
+Conceitos: vetor ordenado, invariante de laço, complexidade, recursividade, divisão-e-conquista
+Problema: Dado um vetor ordenado e um valor x, descobrir se x está no vetor (e em que posição) sem examinar todas as posições.
+
+Ideia. Se o vetor está em ordem crescente, basta comparar x com o elemento do meio, vet[m]. Se vet[m] == x, terminamos. Se vet[m] < x, então x só pode estar à direita de m; se vet[m] > x, só pode estar à esquerda. Em qualquer caso, metade das posições candidatas é descartada com uma única comparação, e repetimos o raciocínio na metade que sobrou. É a [[divisao_e_conquista]] em sua forma mais simples: dividir o problema ao meio e resolver apenas uma das metades.
+
+Especificação. buscaBinaria(vet, e, d, x) devolve um índice j entre e e d com vet[j] == x, ou -1 se x não ocorre em vet[e..d]. A pré-condição é que vet[e..d] esteja em ordem crescente. Se x ocorre várias vezes (como o 2 e o 7 no vetor do exemplo), a função devolve a posição de uma das ocorrências, não necessariamente a primeira.
+
+Invariante e prova curta. Em cada teste do laço vale o invariante: "x NÃO pertence a vet[0..e-1] e nem a vet[d+1..n-1]", isto é, se x está no vetor, está em vet[e..d].
+ - Início: e = 0 e d = n-1; as duas regiões excluídas são vazias.
+ - Manutenção: como o vetor é crescente, vet[m] < x implica que x não está em vet[e..m], então é seguro fazer e = m+1; simetricamente, vet[m] > x permite d = m-1.
+ - Término: a cada passo o intervalo perde pelo menos o elemento vet[m], logo d-e+1 diminui estritamente. Quando e > d o intervalo é vazio e, pelo invariante, x não está no vetor. Se o laço termina por vet[m] == x, a posição m é a resposta.
+
+Complexidade. A cada iteração o tamanho do intervalo cai (no mínimo) pela metade: n, n/2, n/4, ..., 1. Logo há no máximo ⌊log₂ n⌋ + 1 iterações, isto é, tempo O(log n). A versão iterativa usa espaço O(1); a recursiva usa O(log n) de pilha de chamadas. Para n = 1 000 000 bastam cerca de 20 comparações, contra até 1 000 000 de uma busca sequencial.
+
+Cuidados.
+ - O intervalo é fechado, portanto a chamada correta para um vetor de n elementos é buscaBinaria(vet, 0, n-1, x). Chamar com d = n faz o algoritmo poder ler vet[n], que está fora do vetor (comportamento indefinido em C).
+ - A média (e + d) / 2 usa divisão inteira. Escrever e + (d - e) / 2 dá o mesmo valor e evita que a soma e + d estoure o tipo int em vetores muito grandes.
+ - A busca binária só funciona se o vetor estiver ordenado; ordenar antes custa O(n log n) (veja [[ordena_fusao]] e [[ordena_rapido]]), o que só compensa se forem feitas muitas buscas.
+
+<<C
+#include <stdio.h>
+
+/* Versão iterativa. Devolve j em e..d com vet[j] == x, ou -1.
+   Pré-condição: vet[e..d] em ordem crescente. */
+int buscaBinaria(int vet[], int e, int d, int x)
+{
+  int m;
+  while (e <= d) {   /* invariante: x NÃO pertence a vet[0..e-1] nem a vet[d+1..n-1] */
+    m = e + (d - e) / 2;
+    if (vet[m] < x)
+      e = m + 1;     /* metade esquerda NÃO contém x */
+    else if (vet[m] > x)
+      d = m - 1;     /* metade direita NÃO contém x */
+    else
+      return m;      /* encontrou */
+  }
+  return -1;
+}
+
+/* Versão recursiva equivalente. */
+int buscaBinariaRec(int vet[], int e, int d, int x)
+{
+  int m;
+  if (e > d)
+    return -1;       /* intervalo vazio */
+  m = e + (d - e) / 2;
+  if (vet[m] < x)
+    return buscaBinariaRec(vet, m + 1, d, x);
+  if (vet[m] > x)
+    return buscaBinariaRec(vet, e, m - 1, x);
+  return m;
+}
+
+int main(void)
+{
+  int n = 9, vet[] = { 0, 2, 2, 3, 5, 6, 7, 7, 9 };   /* tem que estar ordenado */
+  int busca[] = { 0, 3, 7, 4, 10 };
+  int i, j;
+
+  for (i = 0; i < 5; i++) {
+    j = buscaBinaria(vet, 0, n - 1, busca[i]);          /* d = n-1, não n */
+    if (j >= 0)
+      printf("achei %d em vet[%d]\n", busca[i], j);
+    else
+      printf("%d nao esta no vetor\n", busca[i]);
+  }
+  printf("%d\n", buscaBinariaRec(vet, 0, n - 1, 9));    /* 8 */
+  return 0;
+}
+C>>
+
+REF: BENTLEY, Jon. Programming Pearls. 2. ed. Reading: Addison-Wesley, 1999. (Coluna 4, "Writing Correct Programs", trata da busca binária e de seu invariante.)
+REF: CORMEN, Thomas H.; LEISERSON, Charles E.; RIVEST, Ronald L.; STEIN, Clifford. Introduction to Algorithms. 3. ed. Cambridge: MIT Press, 2009. (Exercício 2.3-5.)
+REF: FEOFILOFF, Paulo. Algoritmos em linguagem C. Rio de Janeiro: Elsevier, 2009.

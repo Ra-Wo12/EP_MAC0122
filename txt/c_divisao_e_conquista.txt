@@ -1,0 +1,13 @@
+Tecnica:
+Algoritmo:
+Autores:
+Data:
+Conceitos: divisão-e-conquista
+Problema:
+
+A divisão-e-conquista resolve um problema em três passos: dividir a instância em instâncias menores do mesmo problema, conquistar resolvendo cada uma (em geral recursivamente, até o caso-base, resolvido diretamente) e combinar as respostas parciais na resposta final. A eficiência vem de a divisão ser balanceada e de a combinação ser barata. O tempo é descrito por recorrências do tipo T(n) = a·T(n/b) + f(n), resolvidas pelo teorema mestre ou pela árvore de recursão.
+
+Exemplos: [[busca_binaria]] (divide ao meio e conquista uma só metade, sem combinar), [[ordena_fusao]] (divisão trivial, combinação por intercalação) e [[ordena_rapido]] (divisão por partição, nada a combinar). Quando as instâncias menores se repetem, a programação dinâmica é preferível. Veja também [[recursividade]].
+
+REF: CORMEN, Thomas H.; LEISERSON, Charles E.; RIVEST, Ronald L.; STEIN, Clifford. Introduction to Algorithms. 3. ed. Cambridge: MIT Press, 2009. (Capítulo 4, "Divide-and-conquer".)
+REF: BRASSARD, Gilles; BRATLEY, Paul. Fundamentals of Algorithmics. Englewood Cliffs: Prentice Hall, 1996. (Capítulo 7, "Divide-and-conquer".)

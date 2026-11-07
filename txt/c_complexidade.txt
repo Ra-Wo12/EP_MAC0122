@@ -1,0 +1,14 @@
+Tecnica:
+Algoritmo:
+Autores:
+Data:
+Conceitos: complexidade
+Problema:
+
+A complexidade de um algoritmo mede quanto recurso ele consome, em função do tamanho n da entrada: normalmente tempo (número de operações básicas) e espaço (memória extra). Em vez de segundos, que dependem da máquina, contamos operações e descrevemos como o número cresce com n usando a notação assintótica: f(n) = O(g(n)) significa que, para n grande, f cresce no máximo como g, a menos de uma constante; Θ(g(n)) significa crescimento da mesma ordem, e Ω(g(n)), no mínimo igual.
+
+Ordens frequentes, da mais barata para a mais cara: O(1) (acesso a vetor), O(log n) ([[busca_binaria]]), O(n) (busca sequencial), O(n log n) ([[ordena_fusao]], [[ordena_monte]]), O(n²) ([[ordena_selecao_direta]]), O(n!) ([[ordena_tentativa_erro]]). Distinguem-se o pior caso, o melhor caso e o caso médio: o [[ordena_rapido]] tem pior caso Θ(n²) e caso médio Θ(n log n). Para algoritmos recursivos, o tempo é descrito por uma recorrência, como T(n) = 2T(n/2) + Θ(n) para a ordenação por fusão, cuja solução é Θ(n log n). Ordenações que só comparam elementos não podem ser mais rápidas que Ω(n log n) no pior caso; a [[ordena_frequencia]] escapa disso porque não compara chaves.
+
+REF: CORMEN, Thomas H.; LEISERSON, Charles E.; RIVEST, Ronald L.; STEIN, Clifford. Introduction to Algorithms. 3. ed. Cambridge: MIT Press, 2009. (Capítulo 3, "Growth of functions".)
+REF: KNUTH, Donald E. The Art of Computer Programming, v. 1: Fundamental Algorithms. 3. ed. Reading: Addison-Wesley, 1997. (Seção 1.2.11, "Asymptotic representations".)
+REF: ZIVIANI, Nivio. Projeto de Algoritmos: com implementações em Pascal e C. 3. ed. São Paulo: Cengage Learning, 2011.

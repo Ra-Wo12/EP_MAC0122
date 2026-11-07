@@ -1,0 +1,99 @@
+Tecnica: Divisão-e-conquista
+Algoritmo: Ordenação por fusão (Merge Sort)
+Autores: John von Neumann
+Data: 1945
+Conceitos: recursividade, fusão, complexidade, divisão-e-conquista
+Problema: Ordenar um vetor de n elementos em tempo O(n log n), dividindo-o ao meio, ordenando cada metade e intercalando os resultados.
+
+Ideia. Três passos: (1) dividir v[e..d] ao meio, em v[e..m] e v[m+1..d]; (2) conquistar: ordenar cada metade recursivamente; (3) combinar: intercalar (fundir) as duas metades já ordenadas num único trecho ordenado. Um trecho com 0 ou 1 elemento já está ordenado: é o caso-base da [[recursividade]]. A intercalação é o coração do método: dados dois vetores ordenados, o menor elemento do conjunto é sempre o primeiro de um dos dois, então basta comparar as duas "frentes" repetidamente.
+
+Invariante da intercalação. Em cada passo do primeiro laço de fusao, Aux[e1..k-1] contém, em ordem crescente, exatamente os elementos de V[e1..i-1] e de V[e2..j-1], e cada um deles é menor ou igual a todos os que ainda restam em V[i..d1] e V[j..d2]. Retirar sempre o menor dos dois "topos", V[i] e V[j], preserva o invariante; quando uma das metades se esgota, o restante da outra já está em ordem e é copiado. Em caso de empate o código retira os dois topos, primeiro o da metade esquerda; assim elementos iguais mantêm a ordem relativa original e a ordenação é estável.
+
+Correção da ordenação. Por indução no tamanho: o caso-base (tamanho ≤ 1) é trivial; para n ≥ 2, cada metade tem tamanho menor que n, logo é ordenada corretamente pela hipótese de indução, e a intercalação produz um trecho ordenado com os mesmos elementos.
+
+Complexidade. A intercalação de n elementos custa Θ(n). Então T(n) = 2·T(n/2) + Θ(n), que resolve para Θ(n log n) no melhor, no médio e no pior caso: a árvore de recursão tem cerca de log₂ n níveis e cada nível trabalha Θ(n) no total. O preço é espaço auxiliar Θ(n) para o vetor aux.
+
+Cuidados. Não declare o vetor auxiliar com tamanho fixo (por exemplo, Aux[MAX] dentro de fusao): isso limita arbitrariamente o tamanho das entradas, estoura se n > MAX e ainda gasta tempo e pilha a cada chamada. A versão abaixo aloca o vetor auxiliar uma única vez, em ordena_por_fusao, e o reaproveita em todas as chamadas recursivas. Depure sem contadores de profundidade nem impressões dentro da recursão: eles só atrapalham.
+
+Observação histórica. A autoria do método é atribuída a John von Neumann, que o planejou em 1945 para o computador EDVAC; D. Knuth analisou o manuscrito original em 1970 (veja as referências).
+
+<<C
+#include <stdio.h>
+#include <stdlib.h>
+
+void imprime(int V[], int ini, int fim)
+{
+  int i;
+  for (i = ini; i <= fim; i++)
+    printf("%3d ", V[i]);
+  printf("\n");
+}
+
+/* Funde V[esq..med] e V[med+1..dir], ambos ordenados, usando Aux[]. */
+static void fusao(int V[], int Aux[], int esq, int med, int dir)
+{
+  int i, j, k, e1, d1, e2, d2;
+  e1 = esq;     d1 = med;
+  e2 = med + 1; d2 = dir;
+  k = i = e1;
+  j = e2;
+  while (i <= d1 && j <= d2) {
+    /* compara os "topos" e retira o menor dos dois */
+    if (V[i] < V[j])
+      Aux[k++] = V[i++];
+    else if (V[i] > V[j])
+      Aux[k++] = V[j++];
+    else {                           /* empate: pega os dois "topos" (estável) */
+      Aux[k++] = V[i++];
+      Aux[k++] = V[j++];
+    }
+  }
+  while (i <= d1)                    /* copia o restante de V[e1..d1] */
+    Aux[k++] = V[i++];
+  while (j <= d2)                    /* copia o restante de V[e2..d2] */
+    Aux[k++] = V[j++];
+  for (i = e1; i <= d2; i++)         /* reconstrói V[e1..d2] ordenado */
+    V[i] = Aux[i];
+}
+
+static void ordena(int V[], int Aux[], int esq, int dir)
+{
+  int med;
+  if (esq >= dir)
+    return;                          /* 0 ou 1 elemento: já ordenado */
+  med = (esq + dir) / 2;
+  ordena(V, Aux, esq, med);          /* ordena V[esq..med] */
+  ordena(V, Aux, med + 1, dir);      /* ordena V[med+1..dir] */
+  fusao(V, Aux, esq, med, dir);      /* funde as duas metades */
+}
+
+/* Ordena V[esq..dir]. Devolve 0 se ok, -1 se faltou memória.
+   O vetor auxiliar é alocado uma única vez, com o tamanho necessário. */
+int ordena_por_fusao(int V[], int esq, int dir)
+{
+  int *Aux;
+  if (esq >= dir)
+    return 0;
+  Aux = malloc((size_t)(dir + 1) * sizeof *Aux);
+  if (Aux == NULL)
+    return -1;
+  ordena(V, Aux, esq, dir);
+  free(Aux);
+  return 0;
+}
+
+int main(void)
+{
+  int vet[] = { 83, 86, 77, 15, 93, 35, 86, 92, 49, 21 }, n = 10;
+
+  imprime(vet, 0, n - 1);
+  ordena_por_fusao(vet, 0, n - 1);
+  imprime(vet, 0, n - 1);            /* 15 21 35 49 77 83 86 86 92 93 */
+  return 0;
+}
+C>>
+
+REF: CORMEN, Thomas H.; LEISERSON, Charles E.; RIVEST, Ronald L.; STEIN, Clifford. Introduction to Algorithms. 3. ed. Cambridge: MIT Press, 2009. (Seção 2.3, "Designing algorithms".)
+REF: KNUTH, Donald E. The Art of Computer Programming, v. 3: Sorting and Searching. 2. ed. Reading: Addison-Wesley, 1998. (Seção 5.2.4, "Sorting by merging".)
+REF: KNUTH, Donald E. Von Neumann's first computer program. ACM Computing Surveys, v. 2, n. 4, 1970.
+REF: PRIESTLEY, Mark. Routines of Substitution: John von Neumann's Work on Software Development, 1945-1948. Cham: Springer, 2018. DOI 10.1007/978-3-319-91671-2.

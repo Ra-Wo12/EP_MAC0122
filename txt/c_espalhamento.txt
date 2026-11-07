@@ -1,0 +1,13 @@
+Tecnica:
+Algoritmo:
+Autores:
+Data:
+Conceitos: espalhamento
+Problema:
+
+O espalhamento (em inglês, hashing) guarda e procura chaves numa tabela calculando a posição de cada chave a partir dela própria. Uma função de espalhamento h transforma a chave em um índice de 0 a M-1; inserir e buscar passam a custar, em média, O(1), contra O(log n) da busca binária num vetor ordenado e O(n) da busca sequencial. A função deve ser barata, depender de toda a chave e distribuir as chaves de modo uniforme.
+
+Como o número de chaves possíveis é maior que M, duas chaves diferentes podem ter o mesmo índice: é uma colisão, e toda tabela de espalhamento precisa de uma estratégia para tratá-las. As duas famílias clássicas são o encadeamento (cada posição guarda uma lista ligada das chaves que colidiram) e o endereçamento aberto (a chave é colocada em outra posição livre da própria tabela, seguindo uma sequência de sondagem). O desempenho depende do fator de carga, α = n/M. O algoritmo "Tabela de espalhamento p/ palavras reservadas de C" compara quatro funções e mede suas colisões; para a ideia de busca por divisão pela metade, veja [[busca_binaria]].
+
+REF: CORMEN, Thomas H.; LEISERSON, Charles E.; RIVEST, Ronald L.; STEIN, Clifford. Introduction to Algorithms. 3. ed. Cambridge: MIT Press, 2009. (Capítulo 11, "Hash tables".)
+REF: KNUTH, Donald E. The Art of Computer Programming, v. 3: Sorting and Searching. 2. ed. Reading: Addison-Wesley, 1998. (Seção 6.4, "Hashing".)

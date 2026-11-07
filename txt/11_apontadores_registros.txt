@@ -1,0 +1,100 @@
+Tecnica: Estrutura de dados
+Algoritmo: Apontadores, struct e typedef
+Autores:
+Data:
+Conceitos: apontador, registro, passagem por referência
+Problema: Representar objetos compostos (como um aluno, com identificador, CPF e nome) e permitir que funções os consultem e modifiquem sem copiá-los.
+
+Apontadores. Um apontador (ponteiro) é uma variável cujo valor é o endereço de outra variável. O operador & devolve o endereço de uma variável; o operador * só se aplica a apontadores e devolve o conteúdo da variável apontada, que pode ser lido ou escrito. Se ap = &a, então *ap = 10 atribui 10 à própria variável a. É por isso que o scanf recebe &x: precisa do endereço de x para poder alterá-la. A função main também pode receber argumentos da linha de comando: argc é o número de argumentos e argv[0..argc-1] são os textos, sendo argv[0] o nome do próprio programa.
+
+Registros. Um registro (struct) agrupa campos de tipos diferentes sob um só nome, e typedef dá um nome curto ao tipo, de modo que escrevemos Registro em vez de struct registro. Para um apontador reg para registro, reg->campo é o mesmo que (*reg).campo. Escrever *reg.campo é um erro: o ponto tem precedência sobre o asterisco.
+
+Passagem por referência. Em C, os argumentos são sempre copiados (passagem por valor). Para que uma função altere a variável do chamador, passamos o endereço dela: a função recebe uma cópia do endereço, mas através dele alcança a variável original. É o que faz a função troca funcionar e o que obriga inserirRegistro a receber um Registro * para que o registro do chamador seja de fato preenchido. Passar um registro grande por apontador também evita copiar todos os seus bytes a cada chamada; se a função não deve modificá-lo, declare o parâmetro como const.
+
+Busca em vetor de registros. buscaPorId e buscaPorNome percorrem o vetor e devolvem o índice j do primeiro registro que satisfaz o critério, ou -1 se não houver. Invariante do laço: nenhum dos registros vet[0..i-1] satisfaz o critério. Para comparar nomes use strcmp, nunca ==, que compararia endereços. O CPF é guardado como double para que 9 ou mais dígitos não percam precisão, como aconteceria com float.
+
+Complexidade. As duas buscas são sequenciais: O(n) comparações no pior caso.
+
+<<C
+#include <stdio.h>
+#include <string.h>
+
+#define MAX 50                       /* número máximo de registros e tamanho do nome */
+#define TE  10                       /* número de nomes no exemplo */
+
+typedef struct {                     /* declaração de tipo composto */
+  int id;                            /* identificador interno do registro */
+  double cpf;                        /* double: 9 dígitos "estouram" a precisão de float */
+  char nome[MAX];
+} Registro;                          /* nome do novo tipo */
+
+char *exemplosNomes[] = { "aluno 0", "aluno 1", "aluno 2", "aluno 3", "aluno 4",
+                          "aluno 5", "aluno 6", "aluno 7", "aluno 8", "aluno 9" };
+double vetCPF[] = { 123123123.12, 213123133.13, 312123143.14, 423123153.15, 523123163.16,
+                    623123173.17, 723123183.18, 823123193.19, 923123203.20, 987123213.21 };
+
+/* Passagem por referência: altera as variáveis do chamador. */
+void troca(int *a, int *b)
+{
+  int t = *a;
+  *a = *b;
+  *b = t;
+}
+
+/* Devolve j em 0..n-1 com vet[j].id == id, ou -1 se não existe. */
+int buscaPorId(Registro vet[], int n, int id)
+{
+  int i;
+  for (i = 0; i < n; i++)            /* invariante: vet[0..i-1] não tem o id */
+    if (vet[i].id == id)
+      return i;
+  return -1;
+}
+
+/* Devolve j em 0..n-1 com nome igual a nome, ou -1 se não existe. */
+int buscaPorNome(Registro vet[], int n, char *nome)
+{
+  int i;
+  for (i = 0; i < n; i++)
+    if (strcmp(vet[i].nome, nome) == 0)
+      return i;
+  return -1;
+}
+
+void imprimirRegistro(Registro reg)
+{
+  printf(" - %3d : %11.2f : %s\n", reg.id, reg.cpf, reg.nome);
+}
+
+/* Obrigatório passar o Registro por referência para que o argumento
+   do chamador seja alterado. */
+void inserirRegistro(Registro *reg, int idP, double cpfP, char *nomeP)
+{
+  reg->id = idP;                     /* equivale a (*reg).id = idP */
+  reg->cpf = cpfP;
+  strcpy(reg->nome, nomeP);
+}
+
+int main(void)
+{
+  Registro dados[MAX];
+  int n = TE, i, a = 1, b = 2, *ap = &a;
+
+  for (i = 0; i < n; i++) {
+    inserirRegistro(&dados[i], i, vetCPF[i], exemplosNomes[i]);
+    imprimirRegistro(dados[i]);
+  }
+  printf("%d\n", buscaPorId(dados, n, 7));              /* 7 */
+  printf("%d\n", buscaPorNome(dados, n, "aluno 3"));    /* 3 */
+  printf("%d\n", buscaPorNome(dados, n, "aluno 99"));   /* -1 */
+
+  *ap = 10;                          /* ap aponta para a: a passa a valer 10 */
+  troca(&a, &b);
+  printf("a=%d b=%d\n", a, b);       /* a=2 b=10 */
+  return 0;
+}
+C>>
+
+REF: KERNIGHAN, Brian W.; RITCHIE, Dennis M. The C Programming Language. 2. ed. Englewood Cliffs: Prentice Hall, 1988. (Capítulo 5, "Pointers and arrays", e capítulo 6, "Structures".)
+REF: FEOFILOFF, Paulo. Algoritmos em linguagem C. Rio de Janeiro: Elsevier, 2009.
+REF: SZWARCFITER, Jayme L.; MARKENZON, Lilian. Estruturas de Dados e seus Algoritmos. 3. ed. Rio de Janeiro: LTC, 2010.

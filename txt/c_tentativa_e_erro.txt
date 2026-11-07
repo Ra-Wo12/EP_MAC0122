@@ -1,0 +1,13 @@
+Tecnica:
+Algoritmo:
+Autores:
+Data:
+Conceitos: tentativa-e-erro
+Problema:
+
+A tentativa-e-erro (em inglês, backtracking) busca uma solução construindo-a passo a passo: a cada passo experimenta-se uma das escolhas possíveis; se a escolha leva a um beco sem saída, ela é desfeita (voltar atrás) e a próxima é experimentada. O espaço de busca forma uma árvore de decisões percorrida em profundidade; quando um ramo viola uma restrição, ele é podado e todos os seus descendentes deixam de ser examinados, o que pode reduzir drasticamente o trabalho em relação à enumeração completa.
+
+O padrão geral é: se a solução está completa, aceite; senão, para cada escolha viável, faça a escolha, chame recursivamente e, se falhar, desfaça-a. Sem poda, o custo é o tamanho do espaço de busca, muitas vezes exponencial ou fatorial, como na [[ordena_tentativa_erro]], que testa as n! permutações. Problemas clássicos: as oito damas, o passeio do cavalo, o labirinto, o preenchimento de sudoku. A estrutura é a mesma da [[busca_profundidade]] e se apoia na [[recursividade]].
+
+REF: WIRTH, Niklaus. Algorithms + Data Structures = Programs. Englewood Cliffs: Prentice Hall, 1976. (Capítulo 3, "Recursive algorithms", com exemplos de backtracking.)
+REF: BRASSARD, Gilles; BRATLEY, Paul. Fundamentals of Algorithmics. Englewood Cliffs: Prentice Hall, 1996. (Backtracking.)

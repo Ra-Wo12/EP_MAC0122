@@ -1,0 +1,86 @@
+Tecnica: Tentativa-e-erro (backtracking)
+Algoritmo: Ordenação por tentativa e erro
+Autores:
+Data:
+Conceitos: backtracking, permutação, complexidade, tentativa-e-erro, recursividade
+Problema: Ordenar um vetor gerando, uma a uma, as permutações de seus elementos até encontrar uma que esteja em ordem crescente.
+
+Ideia. Um vetor ordenado é, em particular, uma das n! permutações de seus elementos. A estratégia de [[tentativa_e_erro]] constrói permutações posição por posição: fixamos o elemento da posição k escolhendo, uma a uma, todas as possibilidades entre v[k..n-1]; para cada escolha, tentamos completar o restante recursivamente. Se a tentativa falha, desfazemos a escolha (backtracking) e experimentamos a próxima. Quando todas as posições estão preenchidas, testamos se o vetor está em ordem.
+
+Invariante. Ao entrar na chamada ordena_te(vet, n, k): (1) vet[0..k-1] é o prefixo já escolhido e não será alterado por esta chamada; (2) vet[k..n-1] contém exatamente os elementos ainda não usados. Ao devolver 0 (fracasso), a chamada restaura o vetor ao estado em que o recebeu, porque cada troca é desfeita; ao devolver 1, o vetor está ordenado e nada mais é desfeito.
+
+Complexidade. Existem n! permutações e testar cada uma custa O(n); no pior caso o tempo é O(n · n!). Com n = 10 já são 3 628 800 permutações; com n = 15, mais de 10¹²: o método é inviável na prática. A variável total do código conta as trocas tentadas; nos testes do curso o resultado foi 32 para o vetor {3, 1, 4, 2} (n = 4), 7 899 918 para o vetor do exemplo abaixo (n = 10) e 977 141 114 para um vetor de n = 12 (cerca de minutos de execução). Numa comparação cronometrada com [[ordena_rapido]], [[ordena_fusao]] e [[ordena_monte]], um vetor de 13 elementos levou cerca de 96 segundos por tentativa e erro, contra alguns microssegundos para os demais métodos. Serve como exemplo didático de que a técnica "gerar e testar" é correta, mas pode ser terrivelmente ineficiente em comparação com [[ordena_fusao]] (O(n log n)). Se houver valores repetidos, permutações iguais são geradas mais de uma vez, o que não afeta a correção.
+
+Em C, a interface fica num arquivo de cabeçalho (.h), com guarda de inclusão e apenas declarações; as definições (inclusive a da variável total) ficam no .c correspondente. Colocar definições de funções ou variáveis no .h causa erro de definição múltipla quando mais de um arquivo o inclui.
+
+<<C
+#ifndef ORDENA_TENTATIVA_ERRO_H
+#define ORDENA_TENTATIVA_ERRO_H
+
+extern int total;   /* total de operações (trocas tentadas) */
+
+/* Troca o conteúdo de *a e *b. */
+void troca(int *a, int *b);
+
+/* Rearranja vet[k..n-1] até que vet[0..n-1] fique ordenado.
+   Devolve 1 se conseguiu (sempre consegue quando chamada com k = 0). */
+int ordena_te(int vet[], int n, int k);
+
+#endif
+C>>
+
+<<C
+#include <stdio.h>
+
+int total = 0;   /* conta o total de operações */
+
+void troca(int *a, int *b)
+{
+  int temp = *a;
+  *a = *b;
+  *b = temp;
+}
+
+int ordena_te(int vet[], int n, int k)
+{
+  int i;
+  if (k == n) {                      /* todas as posições preenchidas: confere */
+    for (i = 1; i < n; i++)
+      if (vet[i] < vet[i-1])
+        return 0;                    /* não ordenado */
+    return 1;                        /* ordenado com sucesso */
+  }
+  for (i = k; i < n; i++) {          /* tenta cada elemento na posição k */
+    total++;
+    troca(&vet[k], &vet[i]);         /* coloca vet[i] na posição k */
+    if (ordena_te(vet, n, k + 1))
+      return 1;                      /* solução encontrada */
+    troca(&vet[k], &vet[i]);         /* não deu certo: desfaz (backtrack) */
+  }
+  return 0;                          /* nenhuma solução neste ramo */
+}
+
+void imprime(int v[], int n)
+{
+  int i;
+  for (i = 0; i < n; i++)
+    printf("%d ", v[i]);
+  printf("\n");
+}
+
+int main(void)
+{
+  int vetor[] = {19, 2, 3, 7, 10, 8, 5, 4, 1, 15}, n = 10;
+
+  printf("Vetor original (n=%d): ", n);
+  imprime(vetor, n);
+  if (ordena_te(vetor, n, 0))
+    printf("Foi possível ordenar! Mas custou %d trocas!\n", total);
+  imprime(vetor, n);                 /* 1 2 3 4 5 7 8 10 15 19 */
+  return 0;
+}
+C>>
+
+REF: BRASSARD, Gilles; BRATLEY, Paul. Fundamentals of Algorithmics. Englewood Cliffs: Prentice Hall, 1996. (Backtracking.)
+REF: KNUTH, Donald E. The Art of Computer Programming, v. 4A: Combinatorial Algorithms, Part 1. Upper Saddle River: Addison-Wesley, 2011. (Seção 7.2.1.2, "Generating all permutations".)
+REF: ZIVIANI, Nivio. Projeto de Algoritmos: com implementações em Pascal e C. 3. ed. São Paulo: Cengage Learning, 2011.

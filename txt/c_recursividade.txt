@@ -1,0 +1,14 @@
+Tecnica:
+Algoritmo:
+Autores:
+Data:
+Conceitos: recursividade
+Problema:
+
+Uma função é recursiva quando, para resolver um problema, chama a si mesma sobre uma instância menor do mesmo problema. Toda definição recursiva correta tem duas partes: o caso-base, resolvido diretamente, e o passo recursivo, que reduz o problema e se apoia na hipótese de que a chamada menor funciona (a mesma lógica da indução matemática). Para garantir que o processo termina, identifica-se uma medida que diminui a cada chamada e nunca passa do caso-base: o segundo argumento no [[mdc_euclides]], o tamanho do intervalo na [[busca_binaria]].
+
+Cada chamada ocupa um registro de ativação na pilha de execução; recursões muito profundas podem esgotá-la. Toda recursão pode ser reescrita com laço e pilha explícita (veja o segundo trecho de [[busca_profundidade]]), e as recursões em que a chamada é a última ação podem ser trocadas por um laço simples. A recursividade é a base de técnicas como a divisão-e-conquista ([[ordena_fusao]], [[ordena_rapido]]) e a tentativa-e-erro ([[ordena_tentativa_erro]]).
+
+REF: KERNIGHAN, Brian W.; RITCHIE, Dennis M. The C Programming Language. 2. ed. Englewood Cliffs: Prentice Hall, 1988. (Seção 4.10, "Recursion".)
+REF: ROBERTS, Eric S. Thinking Recursively. Nova York: Wiley, 1986.
+REF: CORMEN, Thomas H.; LEISERSON, Charles E.; RIVEST, Ronald L.; STEIN, Clifford. Introduction to Algorithms. 3. ed. Cambridge: MIT Press, 2009. (Capítulo 4, "Divide-and-conquer".)

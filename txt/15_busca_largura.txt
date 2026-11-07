@@ -1,0 +1,158 @@
+Tecnica: Busca em grafos
+Algoritmo: Busca em largura (BFS)
+Autores: Konrad Zuse, Edward F. Moore, C. Y. Lee
+Data: 1945 (Zuse; publicado em 1972); 1959 (Moore); 1961 (Lee)
+Conceitos: grafo, fila, lista de vizinhos
+Problema: A partir de um nó s de um grafo, visitar todos os nós alcançáveis e descobrir, para cada um, a menor quantidade de arestas num caminho de s até ele.
+
+Ideia. A busca em largura explora o grafo por camadas: primeiro s (distância 0), depois todos os vizinhos de s (distância 1), depois os vizinhos desses que ainda não foram vistos (distância 2), e assim por diante. Para respeitar essa ordem usa-se uma [[fila]]: insere-se s; enquanto a fila não estiver vazia, remove-se o primeiro nó u, visita-se u e inserem-se na fila todos os seus vizinhos que ainda não foram inseridos alguma vez. Como a fila é FIFO, todos os nós à distância d saem antes dos de distância d+1.
+
+Representação. A estrutura de dados é híbrida (estática e dinâmica): um vetor estático vetNosGrafo com todos os nós, e, para cada nó, uma lista ligada de vizinhos (lista de adjacência), cujos elementos guardam o índice do vizinho no vetor de nós. Guardar índices, e não apontadores para os nós, evita construções cíclicas de apontadores. Uma aresta não orientada {i, j} aparece duas vezes: j na lista de i e i na lista de j. O espaço é Θ(n + m), contra Θ(n²) de uma matriz de adjacência.
+
+A fila. O código de aula usava funções de uma biblioteca de fila externa; aqui a fila foi escrita "inline", como um vetor com dois índices, ini e fim. Como cada nó entra na fila no máximo uma vez, um vetor de n posições basta e ele não precisa ser circular (compare com a fila circular do tópico [[fila]]).
+
+Marcações. Dois vetores de "bits" controlam a busca: inserido[i] diz se o nó i já entrou alguma vez na fila, e visitado[i] diz se já foi retirado e visitado. Testar inserido (e não só visitado) evita colocar o mesmo nó várias vezes na fila quando o grafo tem ciclos: um vizinho já inserido indica que existe outro caminho até ele.
+
+Invariante. Em todo momento, (1) os nós na fila têm dist igual a algum valor d ou d+1, com os de distância d na frente; (2) todo nó já inserido ou está na fila ou já foi visitado; (3) para todo nó inserido, dist é o comprimento de algum caminho de s até ele. Da propriedade (1) segue que o primeiro nó a inserir v o faz pelo caminho mais curto, e assim dist[v] é a distância mínima, medida em número de arestas. Os nós com dist == -1 ao final não são alcançáveis a partir de s.
+
+Complexidade. Cada nó entra e sai da fila no máximo uma vez, e a lista de vizinhos de cada nó é percorrida uma vez: tempo Θ(n + m). Para arestas com pesos, é preciso usar [[dijkstra]]. Aplicações: distância em labirintos e redes, componentes conexas, teste de bipartição.
+
+Histórico. A literatura atribui a descoberta a Konrad Zuse, que descreveu a busca em largura (e componentes conexas) em sua tese de 1945 sobre a linguagem Plankalkül, publicada apenas em 1972; o método foi reinventado por E. F. Moore em 1959, para achar a saída de um labirinto, e desenvolvido por C. Y. Lee em 1961 como algoritmo de roteamento de fios.
+
+<<C
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAXNOS 10                    /* número máximo de nós do grafo */
+
+typedef struct noV {                 /* lista de vizinhos */
+  int indice;                        /* índice do vizinho no vetor de nós */
+  struct noV *prox;
+} Lista;
+
+typedef struct no {                  /* cada nó do grafo */
+  int info;
+  Lista *vizinhos;                   /* lista ligada dos vizinhos do nó */
+} No;
+
+No *vetNosGrafo[MAXNOS];             /* vetor de nós do grafo */
+int visitado[MAXNOS];                /* nó já visitado? */
+int inserido[MAXNOS];                /* nó já inserido alguma vez na fila? */
+int dist[MAXNOS];                    /* nº de arestas desde a origem; -1 = não alcançado */
+int nVG;                             /* número de nós do grafo */
+
+/* Cria os nós 1..n (índices 0..n-1), sem vizinhos. */
+void criaNos(int n)
+{
+  int i;
+  nVG = n;
+  for (i = 0; i < n; i++) {
+    vetNosGrafo[i] = malloc(sizeof(No));
+    if (vetNosGrafo[i] == NULL)
+      exit(EXIT_FAILURE);
+    vetNosGrafo[i]->info = i + 1;
+    vetNosGrafo[i]->vizinhos = NULL;
+  }
+}
+
+/* Acrescenta j ao fim da lista de vizinhos de i. */
+static void adicionaVizinho(int i, int j)
+{
+  Lista *novo = malloc(sizeof(Lista)), **p = &vetNosGrafo[i]->vizinhos;
+  if (novo == NULL)
+    exit(EXIT_FAILURE);
+  novo->indice = j;
+  novo->prox = NULL;
+  while (*p != NULL)
+    p = &(*p)->prox;
+  *p = novo;
+}
+
+/* Aresta não orientada {i, j}: cada nó entra na lista do outro. */
+void adicionaAresta(int i, int j)
+{
+  adicionaVizinho(i, j);
+  adicionaVizinho(j, i);
+}
+
+/* Grafo 1: árvore com 6 nós e 5 arestas       (1)
+                                              / | \
+                                           (2) (3) (4)
+                                            |       |
+                                           (5)     (6)   */
+void criaGrafo1(void)
+{
+  criaNos(6);
+  adicionaAresta(0, 1);  adicionaAresta(0, 2);  adicionaAresta(0, 3);
+  adicionaAresta(1, 4);  adicionaAresta(3, 5);
+}
+
+/* Grafo 2: 4 nós e 5 arestas, com ciclos      (1)---(2)
+                                                |  \  |
+                                               (3)---(4)   */
+void criaGrafo2(void)
+{
+  criaNos(4);
+  adicionaAresta(0, 1);  adicionaAresta(0, 2);  adicionaAresta(0, 3);
+  adicionaAresta(1, 3);  adicionaAresta(2, 3);
+}
+
+void liberaGrafo(void)
+{
+  int i;
+  for (i = 0; i < nVG; i++) {
+    while (vetNosGrafo[i]->vizinhos != NULL) {
+      Lista *p = vetNosGrafo[i]->vizinhos;
+      vetNosGrafo[i]->vizinhos = p->prox;
+      free(p);
+    }
+    free(vetNosGrafo[i]);
+  }
+}
+
+/* Busca em largura a partir do nó de índice s, usando uma fila.
+   A fila é um vetor com dois índices: como cada nó entra nela no máximo
+   uma vez (inserido[]), n posições bastam e ela não precisa ser circular. */
+void buscaEmLargura(int s)
+{
+  int fila[MAXNOS], ini = 0, fim = 0, u, i;
+  Lista *viz;
+
+  for (i = 0; i < nVG; i++) {
+    visitado[i] = 0;
+    inserido[i] = 0;
+    dist[i] = -1;
+  }
+  fila[fim++] = s;                   /* insere a origem na fila */
+  inserido[s] = 1;
+  dist[s] = 0;
+  while (ini < fim) {                /* enquanto a fila não está vazia */
+    u = fila[ini++];                 /* remove o primeiro da fila */
+    visitado[u] = 1;                 /* visita o nó */
+    printf("<%d: %d> dist=%d\n", u, vetNosGrafo[u]->info, dist[u]);
+    for (viz = vetNosGrafo[u]->vizinhos; viz != NULL; viz = viz->prox)
+      if (!inserido[viz->indice]) {  /* insere só os ainda não inseridos */
+        inserido[viz->indice] = 1;
+        dist[viz->indice] = dist[u] + 1;
+        fila[fim++] = viz->indice;
+      }                              /* senão: já inserido => há ciclo */
+  }
+}
+
+int main(void)
+{
+  criaGrafo1();
+  buscaEmLargura(0);                 /* visita 1 2 3 4 5 6 */
+  liberaGrafo();
+
+  criaGrafo2();
+  buscaEmLargura(0);                 /* visita 1 2 3 4: dist 0 1 1 1 */
+  liberaGrafo();
+  return 0;
+}
+C>>
+
+REF: CORMEN, Thomas H.; LEISERSON, Charles E.; RIVEST, Ronald L.; STEIN, Clifford. Introduction to Algorithms. 3. ed. Cambridge: MIT Press, 2009. (Seção 22.2, "Breadth-first search".)
+REF: MOORE, Edward F. The shortest path through a maze. In: INTERNATIONAL SYMPOSIUM ON THE THEORY OF SWITCHING, 1959. Proceedings... Cambridge: Harvard University Press, 1959. p. 285-292.
+REF: LEE, C. Y. An algorithm for path connections and its applications. IRE Transactions on Electronic Computers, n. 3, p. 346-365, 1961.
+REF: SEDGEWICK, Robert. Algorithms in C, Part 5: Graph Algorithms. 3. ed. Boston: Addison-Wesley, 2002. (Capítulo 18, "Graph search".)

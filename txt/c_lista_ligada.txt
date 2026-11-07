@@ -1,0 +1,13 @@
+Tecnica:
+Algoritmo:
+Autores:
+Data:
+Conceitos: lista ligada
+Problema:
+
+Uma lista ligada é uma sequência de nós, cada um guardando um dado e um apontador para o próximo nó; o fim da lista é marcado por NULL. Os nós são alocados dinamicamente (malloc) e podem estar em qualquer lugar da memória, ao contrário dos elementos de um vetor, que são contíguos. Existem variantes: lista com nó cabeça (sentinela), que simplifica inserções e remoções; lista circular; lista duplamente ligada, com apontadores também para o nó anterior.
+
+Comparada ao vetor, a lista permite inserir e remover sem deslocar elementos e cresce sob demanda, mas não oferece acesso direto ao k-ésimo elemento (O(k) para chegar a ele) e gasta memória extra com os apontadores. Com a lista ligada implementam-se a [[pilha]] e a [[fila]]; ela também guarda as listas de vizinhos de um grafo ([[busca_largura]]) e as listas de colisões de uma tabela de espalhamento. Veja o algoritmo "Lista ligada simples" para o código completo e [[apontadores_registros]] para os pré-requisitos.
+
+REF: SZWARCFITER, Jayme L.; MARKENZON, Lilian. Estruturas de Dados e seus Algoritmos. 3. ed. Rio de Janeiro: LTC, 2010.
+REF: CORMEN, Thomas H.; LEISERSON, Charles E.; RIVEST, Ronald L.; STEIN, Clifford. Introduction to Algorithms. 3. ed. Cambridge: MIT Press, 2009. (Seção 10.2, "Linked lists".)

@@ -1,0 +1,115 @@
+Tecnica: Método guloso
+Algoritmo: Kruskal para árvore espalhada mínima
+Autores: Joseph Kruskal
+Data: 1956
+Conceitos: grafo, árvore, árvore espalhada mínima, union-find, método guloso
+Problema: Dado um grafo não orientado, conexo e com custos nas arestas, escolher n-1 arestas que liguem todos os vértices sem formar ciclos e cujo custo total seja o menor possível (uma árvore espalhada mínima, também chamada árvore geradora de custo mínimo).
+
+Ideia gulosa. O algoritmo ordena as arestas por custo crescente e as examina uma a uma. Uma aresta é aceita se ligar dois vértices que ainda estão em componentes diferentes da floresta construída até então (isto é, se não forma ciclo); caso contrário, é rejeitada. Em cada passo escolhe-se a aresta que parece melhor naquele momento, sem rever decisões: é o [[metodo_guloso]]. A floresta começa com n componentes de um vértice cada e termina, se o grafo é conexo, com uma única árvore de n-1 arestas.
+
+Por que a escolha gulosa é correta. Invariante: o conjunto A de arestas já aceitas está contido em alguma árvore espalhada mínima. Seja e = {u, v} a próxima aresta aceita; u e v estão em componentes diferentes, e seja C a componente de u. Nenhuma aresta de A cruza a fronteira entre C e o resto dos vértices. Suponha que existisse uma aresta f, de custo menor que o de e, com um extremo em C e outro fora de C. Ela teria sido examinada antes de e. Se tivesse sido aceita, estaria em A e C a conteria por inteiro, contra a hipótese de que ela cruza a fronteira de C; se tivesse sido rejeitada, seus extremos já estariam na mesma componente naquele momento e, como componentes só crescem por fusão, estariam na mesma componente agora, o que também é falso. Logo e é uma aresta de custo mínimo entre as que cruzam a fronteira, e a propriedade do corte garante que A ∪ {e} ainda está contida em alguma árvore espalhada mínima. Ao final, A tem n-1 arestas, é uma árvore, e portanto é mínima.
+
+Como decidir rápido se há ciclo: union-find. Precisamos saber, para cada aresta, se seus extremos estão na mesma componente, e fundir componentes. A estrutura union-find mantém cada componente como uma árvore de apontadores para o pai: no código, cc_vertice[i] é o pai de i (-1 para a raiz, que é o "chefe" do conjunto) e cc_altura[i] é a altura da árvore cuja raiz é i. busca_pai(i) sobe até a raiz, encurtando o caminho no processo (compressão de caminho); a união liga a raiz da árvore mais baixa à da mais alta (união por altura), e, em caso de empate, à de menor índice. Duas arestas {u, v} formam ciclo com as já aceitas se e somente se busca_pai(u) == busca_pai(v). Veja o tópico [[union_find]].
+
+Pseudocódigo.
+  Kruskal(vértices VG, arestas AG):
+    ordene AG por peso, crescente
+    para cada v em VG: construa o conjunto {v}      // union-find
+    AEM = {}                                        // arestas da árvore
+    para cada aresta (u, v, w) de AG, em ordem:
+      se busca_pai(u) != busca_pai(v):              // componentes diferentes?
+        AEM = AEM U {(u, v, w)}
+        união(u, v)
+      se |AEM| == |VG| - 1: pare                    // árvore completa
+    devolva AEM
+
+Complexidade. Ordenar as m arestas custa O(m log m) = O(m log n), pois m ≤ n²; o código usa o qsort da biblioteca padrão. As 2m operações de busca e as n-1 uniões custam, com união por altura e compressão de caminho, quase constante cada uma (O(α(n)), com α a inversa da função de Ackermann). Total: O(m log n), dominado pela ordenação. O espaço é O(n + m). Num grafo desconexo, o mesmo código produz uma floresta espalhada mínima, com menos de n-1 arestas; o programa abaixo avisa quando isso ocorre.
+
+Histórico. J. B. Kruskal publicou o método em 1956, no artigo que também trata do problema do caixeiro viajante; em 1959, E. W. Dijkstra o cita no artigo em que apresenta uma solução para a mesma árvore e para o caminho mínimo (veja [[dijkstra]]).
+
+<<C
+#include <stdio.h>
+#include <stdlib.h>
+
+/* ---- Union-Find: cc_vertice[i] é o pai de i na árvore do seu conjunto
+        (-1 se i é a raiz, o representante); cc_altura[i] é a altura da
+        árvore cuja raiz é i. ---- */
+
+/* Encontra o representante do conjunto de i, reduzindo o caminho no processo:
+   cada nó visitado passa a apontar para o avô. */
+static int busca_pai(int cc_vertice[], int i)
+{
+  int j;
+  while ((j = cc_vertice[i]) != -1) {      /* enquanto não for a raiz */
+    if (cc_vertice[j] != -1)               /* ainda tem elemento acima */
+      cc_vertice[i] = cc_vertice[j];       /* compressão de caminho */
+    i = j;                                 /* sobe na árvore */
+  }
+  return i;
+}
+
+/* Usado por qsort: negativo se a < b, positivo se a > b, 0 se iguais (pelo peso). */
+static int compare_arestas(const void *a, const void *b)
+{
+  const int *noa = a, *nob = b;
+  return (noa[2] > nob[2]) - (noa[2] < nob[2]);
+}
+
+/* Algoritmo de Kruskal. arestas[i] = {u, v, peso}. Imprime as arestas da
+   árvore espalhada mínima e devolve o seu peso total. */
+static int kruskal_aem(int arestas[][3], int total_arestas, int total_vertices)
+{
+  int cc_vertice[26], cc_altura[26];       /* grafos com até 26 vértices (A..Z) */
+  int i, rx, ry, total_peso = 0, arestas_usadas = 0;
+
+  for (i = 0; i < total_vertices; i++) {   /* cada vértice é um conjunto */
+    cc_vertice[i] = -1;
+    cc_altura[i] = 0;
+  }
+  /* Passo 1: ordena as arestas pelo peso, crescente */
+  qsort(arestas, (size_t)total_arestas, sizeof *arestas, compare_arestas);
+
+  /* Passo 2: examina as arestas em ordem, pulando as que formam ciclo */
+  for (i = 0; i < total_arestas && arestas_usadas < total_vertices - 1; i++) {
+    rx = busca_pai(cc_vertice, arestas[i][0]);
+    ry = busca_pai(cc_vertice, arestas[i][1]);
+    if (rx != ry) {                        /* componentes distintas */
+      printf("  %c -- %c  (peso %d)\n", 'A' + arestas[i][0], 'A' + arestas[i][1],
+             arestas[i][2]);
+      total_peso += arestas[i][2];
+      arestas_usadas++;
+      /* união: a árvore de maior altura recebe a de menor altura */
+      if (cc_altura[rx] < cc_altura[ry])
+        cc_vertice[rx] = ry;
+      else if (cc_altura[rx] > cc_altura[ry])
+        cc_vertice[ry] = rx;
+      else {                               /* empate: pendura sob o menor índice */
+        if (rx < ry) { cc_vertice[ry] = rx; cc_altura[rx]++; }
+        else         { cc_vertice[rx] = ry; cc_altura[ry]++; }
+      }
+    }
+  }
+  if (arestas_usadas != total_vertices - 1)
+    puts("Atenção: o grafo NÃO é conexo! Não existe árvore espalhada mínima.");
+  return total_peso;
+}
+
+int main(void)
+{
+  /* Vértices A..G = 0..6. */
+  int arestas[][3] = {
+    {0, 1, 7},  {0, 3, 5},  {1, 2, 8},  {1, 3, 9},  {1, 4, 7},  {2, 4, 5},
+    {3, 4, 15}, {3, 5, 6},  {4, 5, 8},  {4, 6, 9},  {5, 6, 11}
+  };
+  int total_arestas = (int)(sizeof arestas / sizeof arestas[0]);   /* 11 */
+
+  puts("Arestas na árvore espalhada mínima:");
+  printf("Peso total da AEM: %d\n", kruskal_aem(arestas, total_arestas, 7));   /* 39 */
+  return 0;
+}
+C>>
+
+REF: KRUSKAL, Joseph B. On the shortest spanning subtree of a graph and the traveling salesman problem. Proceedings of the American Mathematical Society, v. 7, n. 1, p. 48-50, 1956.
+REF: CORMEN, Thomas H.; LEISERSON, Charles E.; RIVEST, Ronald L.; STEIN, Clifford. Introduction to Algorithms. 3. ed. Cambridge: MIT Press, 2009. (Capítulo 23, "Minimum spanning trees".)
+REF: FEOFILOFF, Paulo. Algoritmo de Kruskal. In: Algoritmos para Grafos. IME-USP. Disponível em: https://users.ime.usp.br/~pf/algoritmos_para_grafos/aulas/kruskal.html
+REF: SEDGEWICK, Robert. Algorithms in C, Part 5: Graph Algorithms. 3. ed. Boston: Addison-Wesley, 2002. (Capítulo 20, "Minimum spanning trees".)

@@ -1,0 +1,254 @@
+Tecnica: Busca em grafos
+Algoritmo: Busca em profundidade (DFS)
+Autores: Charles Pierre Trémaux, John Hopcroft, Robert Tarjan
+Data: século XIX (Trémaux, labirintos); 1972-1973 (Hopcroft e Tarjan)
+Conceitos: grafo, pilha, recursividade
+Problema: Percorrer todos os nós de um grafo, indo sempre o mais fundo possível por um caminho antes de recuar, e registrar a ordem em que cada nó é descoberto e terminado.
+
+Ideia. Na busca em profundidade, ao chegar a um nó u marcamos u como visitado e seguimos imediatamente para um vizinho ainda não visitado; só quando u não tem mais vizinhos novos é que "recuamos" para o nó de onde viemos. É como explorar um labirinto: avance até um beco sem saída e volte até a última bifurcação com caminho inexplorado. A formulação é naturalmente recursiva ([[recursividade]]): visita(u) chama visita(w) para cada vizinho w ainda não visitado; a pilha de chamadas é a [[pilha]] que guarda o caminho de volta.
+
+Versão com pilha explícita. O pseudocódigo da disciplina troca a recursão por uma pilha: insere-se o nó inicial na pilha; enquanto a pilha não está vazia, retira-se um nó; se ele ainda não foi visitado, visita-se e inserem-se na pilha todos os seus vizinhos. Um mesmo nó pode entrar várias vezes na pilha (por vizinhos diferentes), por isso o teste "ainda não foi visitado" na hora da retirada é indispensável. Como o último vizinho inserido é o primeiro a ser retirado, a ordem de visita é diferente da recursiva (que segue a ordem da lista de vizinhos), mas ambas são buscas em profundidade válidas. A representação do grafo é a mesma de [[busca_largura]]: vetor de nós e lista de vizinhos.
+
+Numeração. Na versão recursiva mantemos um contador de tempo. pre[u] recebe o tempo ao entrar em u (descoberta) e pos[u] o tempo ao terminar u (todos os vizinhos já tratados). Os intervalos [pre[u], pos[u]] de dois nós são disjuntos ou um contém o outro, o que reflete a estrutura de árvore. Uma varredura externa, de todos os nós, garante que também os nós de outras componentes conexas sejam visitados, formando uma floresta de busca em profundidade; pai[v] = -1 indica a raiz de uma árvore.
+
+Invariante (versão recursiva). Um nó está em um de três estados: não visitado, em andamento (descoberto mas ainda não terminado) ou terminado. Os nós em andamento formam um caminho a partir da raiz da árvore corrente até o nó atual, e estão exatamente na pilha de chamadas. Um nó só é terminado depois que todos os seus vizinhos foram descobertos, o que garante que nenhum nó alcançável a partir de u fica sem visita.
+
+Complexidade. Cada nó é visitado uma vez e a lista de vizinhos de cada um é percorrida uma vez: Θ(n + m) com listas de vizinhos. A profundidade da recursão pode chegar a n. Na versão com pilha explícita, cada aresta pode inserir um nó na pilha, que por isso pode ter até 2m posições. Aplicações: componentes conexas, detecção de ciclos, ordenação topológica, componentes fortemente conexas.
+
+Histórico. A ideia de percorrer um labirinto avançando até o fim e recuando já era conhecida no século XIX, descrita por E. Lucas a partir de um método de C. P. Trémaux; a técnica foi popularizada na teoria de algoritmos por J. Hopcroft e R. Tarjan no início da década de 1970.
+
+<<C
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAXNOS 10                    /* número máximo de nós do grafo */
+
+typedef struct noV {                 /* lista de vizinhos */
+  int indice;                        /* índice do vizinho no vetor de nós */
+  struct noV *prox;
+} Lista;
+
+typedef struct no {                  /* cada nó do grafo */
+  int info;
+  Lista *vizinhos;
+} No;
+
+No *vetNosGrafo[MAXNOS];
+int nVG;                             /* número de nós do grafo */
+
+void criaNos(int n)
+{
+  int i;
+  nVG = n;
+  for (i = 0; i < n; i++) {
+    vetNosGrafo[i] = malloc(sizeof(No));
+    if (vetNosGrafo[i] == NULL)
+      exit(EXIT_FAILURE);
+    vetNosGrafo[i]->info = i + 1;
+    vetNosGrafo[i]->vizinhos = NULL;
+  }
+}
+
+static void adicionaVizinho(int i, int j)       /* j ao fim da lista de i */
+{
+  Lista *novo = malloc(sizeof(Lista)), **p = &vetNosGrafo[i]->vizinhos;
+  if (novo == NULL)
+    exit(EXIT_FAILURE);
+  novo->indice = j;
+  novo->prox = NULL;
+  while (*p != NULL)
+    p = &(*p)->prox;
+  *p = novo;
+}
+
+void adicionaAresta(int i, int j)
+{
+  adicionaVizinho(i, j);
+  adicionaVizinho(j, i);
+}
+
+void liberaGrafo(void)
+{
+  int i;
+  for (i = 0; i < nVG; i++) {
+    while (vetNosGrafo[i]->vizinhos != NULL) {
+      Lista *p = vetNosGrafo[i]->vizinhos;
+      vetNosGrafo[i]->vizinhos = p->prox;
+      free(p);
+    }
+    free(vetNosGrafo[i]);
+  }
+}
+
+/* Grafo: arestas 1-2, 1-3, 2-4, 3-4, 4-5; o nó 6 fica isolado. */
+void criaGrafo(void)
+{
+  criaNos(6);
+  adicionaAresta(0, 1);  adicionaAresta(0, 2);  adicionaAresta(1, 3);
+  adicionaAresta(2, 3);  adicionaAresta(3, 4);
+}
+
+int visitado[MAXNOS];
+int pre[MAXNOS], pos[MAXNOS], pai[MAXNOS];
+
+/* Visita o nó u e, recursivamente, tudo o que for alcançável a partir dele
+   passando só por nós ainda não visitados. */
+static void visita(int u, int *tempo)
+{
+  Lista *viz;
+  visitado[u] = 1;
+  pre[u] = (*tempo)++;               /* descoberta */
+  for (viz = vetNosGrafo[u]->vizinhos; viz != NULL; viz = viz->prox)
+    if (!visitado[viz->indice]) {
+      pai[viz->indice] = u;
+      visita(viz->indice, tempo);
+    }
+  pos[u] = (*tempo)++;               /* término */
+}
+
+/* Floresta de busca em profundidade. Devolve o nº de árvores
+   (= nº de componentes conexas, pois o grafo é não orientado). */
+int buscaEmProfundidade(void)
+{
+  int tempo = 0, arvores = 0, s;
+
+  for (s = 0; s < nVG; s++) {
+    visitado[s] = 0;
+    pai[s] = -1;
+  }
+  for (s = 0; s < nVG; s++)
+    if (!visitado[s]) {
+      visita(s, &tempo);
+      arvores++;
+    }
+  return arvores;
+}
+
+int main(void)
+{
+  int v, comp;
+
+  criaGrafo();
+  comp = buscaEmProfundidade();
+  printf("componentes: %d\n", comp);       /* 2 */
+  for (v = 0; v < nVG; v++)
+    printf("no %d: pre=%2d pos=%2d pai=%2d\n", v + 1, pre[v], pos[v],
+           pai[v] < 0 ? -1 : pai[v] + 1);
+  liberaGrafo();
+  return 0;
+}
+C>>
+
+<<C
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAXNOS 10                    /* número máximo de nós do grafo */
+
+typedef struct noV {                 /* lista de vizinhos */
+  int indice;                        /* índice do vizinho no vetor de nós */
+  struct noV *prox;
+} Lista;
+
+typedef struct no {                  /* cada nó do grafo */
+  int info;
+  Lista *vizinhos;
+} No;
+
+No *vetNosGrafo[MAXNOS];
+int nVG;                             /* número de nós do grafo */
+
+void criaNos(int n)
+{
+  int i;
+  nVG = n;
+  for (i = 0; i < n; i++) {
+    vetNosGrafo[i] = malloc(sizeof(No));
+    if (vetNosGrafo[i] == NULL)
+      exit(EXIT_FAILURE);
+    vetNosGrafo[i]->info = i + 1;
+    vetNosGrafo[i]->vizinhos = NULL;
+  }
+}
+
+static void adicionaVizinho(int i, int j)       /* j ao fim da lista de i */
+{
+  Lista *novo = malloc(sizeof(Lista)), **p = &vetNosGrafo[i]->vizinhos;
+  if (novo == NULL)
+    exit(EXIT_FAILURE);
+  novo->indice = j;
+  novo->prox = NULL;
+  while (*p != NULL)
+    p = &(*p)->prox;
+  *p = novo;
+}
+
+void adicionaAresta(int i, int j)
+{
+  adicionaVizinho(i, j);
+  adicionaVizinho(j, i);
+}
+
+void liberaGrafo(void)
+{
+  int i;
+  for (i = 0; i < nVG; i++) {
+    while (vetNosGrafo[i]->vizinhos != NULL) {
+      Lista *p = vetNosGrafo[i]->vizinhos;
+      vetNosGrafo[i]->vizinhos = p->prox;
+      free(p);
+    }
+    free(vetNosGrafo[i]);
+  }
+}
+
+/* Grafo: arestas 1-2, 1-3, 2-4, 3-4, 4-5; o nó 6 fica isolado. */
+void criaGrafo(void)
+{
+  criaNos(6);
+  adicionaAresta(0, 1);  adicionaAresta(0, 2);  adicionaAresta(1, 3);
+  adicionaAresta(2, 3);  adicionaAresta(3, 4);
+}
+
+int visitado[MAXNOS];
+
+/* DFS a partir do nó s com pilha explícita, como no pseudocódigo:
+     insere s na pilha;
+     enquanto a pilha não está vazia:
+       retira um nó; se não foi visitado: visita-o e insere seus vizinhos.
+   Cada aresta insere no máximo 1 nó, logo MAXNOS*MAXNOS posições bastam. */
+void buscaEmProfundidadePilha(int s)
+{
+  int pilha[MAXNOS * MAXNOS], topo = 0, u;
+  Lista *viz;
+
+  pilha[topo++] = s;
+  while (topo > 0) {                 /* pilha não vazia */
+    u = pilha[--topo];               /* retira o topo */
+    if (!visitado[u]) {
+      visitado[u] = 1;               /* visita */
+      printf("%d ", vetNosGrafo[u]->info);
+      for (viz = vetNosGrafo[u]->vizinhos; viz != NULL; viz = viz->prox)
+        pilha[topo++] = viz->indice; /* insere os vizinhos */
+    }
+  }
+}
+
+int main(void)
+{
+  int i;
+
+  criaGrafo();
+  for (i = 0; i < nVG; i++)
+    visitado[i] = 0;
+  buscaEmProfundidadePilha(0);       /* 1 3 4 5 2 */
+  printf("\n");
+  liberaGrafo();
+  return 0;
+}
+C>>
+
+REF: CORMEN, Thomas H.; LEISERSON, Charles E.; RIVEST, Ronald L.; STEIN, Clifford. Introduction to Algorithms. 3. ed. Cambridge: MIT Press, 2009. (Seção 22.3, "Depth-first search".)
+REF: TARJAN, Robert E. Depth-first search and linear graph algorithms. SIAM Journal on Computing, v. 1, n. 2, p. 146-160, 1972.
+REF: HOPCROFT, John; TARJAN, Robert. Algorithm 447: efficient algorithms for graph manipulation. Communications of the ACM, v. 16, n. 6, p. 372-378, 1973.
+REF: EVEN, Shimon. Graph Algorithms. 2. ed. Cambridge: Cambridge University Press, 2011. (Capítulo 3, "Depth-first search", que relata o método de Trémaux, descrito por Lucas em Récréations Mathématiques, Paris, 1882.)

@@ -1,0 +1,13 @@
+Tecnica:
+Algoritmo:
+Autores:
+Data:
+Conceitos: vetor
+Problema:
+
+Um vetor (array) é uma sequência de elementos do mesmo tipo guardados em posições consecutivas da memória e acessados por índice. Em C, o primeiro elemento tem índice 0, e um vetor de n elementos tem índices de 0 a n-1; acessar fora desse intervalo é comportamento indefinido e não é verificado pelo compilador. O nome do vetor, na maioria dos contextos, equivale ao endereço do primeiro elemento, razão pela qual um vetor passado a uma função é, na prática, passado por referência e a função precisa receber o tamanho à parte.
+
+O acesso a v[i] custa O(1), pois o endereço é calculado diretamente (endereço base + i vezes o tamanho do elemento). Em contrapartida, inserir ou remover no meio obriga a deslocar elementos (O(n)), e o tamanho é fixo na declaração, a menos que se use alocação dinâmica (compare com a lista ligada). Vetores são a base de quase tudo no site: [[busca_binaria]] exige um vetor ordenado e acesso direto; as ordenações trabalham sobre vetores; o monte de [[ordena_monte]] é uma árvore guardada em vetor; a [[pilha]] e a [[fila]] podem ser implementadas com ele.
+
+REF: KERNIGHAN, Brian W.; RITCHIE, Dennis M. The C Programming Language. 2. ed. Englewood Cliffs: Prentice Hall, 1988. (Seção 1.6, "Arrays", e capítulo 5, "Pointers and arrays".)
+REF: FEOFILOFF, Paulo. Algoritmos em linguagem C. Rio de Janeiro: Elsevier, 2009.
