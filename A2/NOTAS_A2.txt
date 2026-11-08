@@ -1,0 +1,66 @@
+NOTAS A2 -- filtro C -> HTML (cdestaque)
+
+ARQUIVOS
+  cdestaque.h / cdestaque.c   API congelada: c2html, c_pagina, cdestaque_css
+  cdestaque_main.c            CLI: cdestaque [-f] arq.c > saida.html   ("-" = stdin)
+  cdestaque_test_main.c       casos-limite + reservadas + fuzz + modo corpus
+                              (tem main(): sufixo _main.c, regra do CTX)
+
+COMPILAR / TESTAR  (flags do CTX: 0 warnings; tambem passa com -pedantic)
+  gcc -std=c99 -Wall -Wextra -fsanitize=address,undefined -o cdestaque cdestaque.c cdestaque_main.c
+  gcc -std=c99 -Wall -Wextra -fsanitize=address,undefined -o cdestaque_test cdestaque_test_main.c cdestaque.c
+  ./cdestaque_test                      # embutidos (esperado: PROBLEMAS: 0)
+  ./cdestaque_test zips/*/*.c zips/*/*.h   # invariante nos 25 .c + 1 .h do curso
+                                        # (os 6 .txt de dados dos zips nao sao C: nao passar)
+  ./cdestaque_test txt/NN_slug.txt ...  # cada bloco <<C ... C>> dos TXT (A7-T2)
+
+PALETA (rastreabilidade, A7-T9)
+  Fonte exigida pelo enunciado: https://en.wikipedia.org/wiki/Syntax_highlighting
+  Acessada em 2026-11-07 e 2026-11-08.  O TEXTO da pagina nao traz hex (o
+  trecho C colorido e renderizado).  Os hex abaixo foram lidos pela equipe na
+  tabela renderizada ("Syntax highlighting", exemplo Hello World) e CONFERIDOS
+  com o estilo padrao do Pygments (stylesheet https://anno-paper.readthedocs.io/
+  _static/pygments.css, consultado em 2026-11-08): hex, negrito e italico
+  coincidem nos 8 valores, e o fundo #f8f8f8 tambem.  Nao foi possivel
+  reconferir contra o HTML da pagina da Wikipedia (so texto puro e acessivel).
+
+  classe   hex      estilo    token no exemplo
+  .k-com   #3D7B7B  italico   // Hello World  e  <stdio.h> (header-name)
+  .k-pp    #9C6500            #include
+  .k-tipo  #B00040            int
+  .k-cmd   #008000  negrito   return
+  .k-str   #BA2121            "Hello World"
+  .k-chr   #BA2121            (nao aparece no exemplo; Pygments: char = string)
+  .k-num   #666666            0
+  Texto base #222222 e borda #dddddd: escolha nossa, nao vem da tabela.
+  Contraste sobre #f8f8f8 >= 4,5:1 em todas (menor: #3D7B7B = 4,58).
+  Cores so em cdestaque_css().
+
+  Da tabela, SEM classe no CTX (nao usadas):
+    \n        #AA5D1F negrito  -> fica na cor da string (k-str)
+    main      #0000FF          -> nome de funcao exige analise sintatica
+  (<stdio.h> USA a cor da tabela: o header-name recebe a classe k-com, o que
+   altera a linha "pp: ... + header-name" do plano A2; a forma "x.h" com aspas
+   segue o mesmo criterio por extrapolacao, nao aparece no exemplo.)
+
+DECISOES (nao definidas no plano)
+  - c2html emite <pre class="c"><code>...</code></pre> SEM '\n' final (o
+    invariante exige); a CLI e c_pagina acrescentam o '\n' fora do <pre>.
+  - c_pagina: CSS inline em <style>; titulo vazio/NULL => "C".
+  - span pp = '#' + espacos + diretiva; header-name de #include e outro span,
+    de classe k-com (cor da Wikipedia para <stdio.h>).
+    Diretivas: as do plano + "line".  '#' so vale no inicio de linha;
+    comentario de bloco antes dele conta como espaco.
+  - "//" continua na linha seguinte se terminar em '\' (C99).
+  - string/char sem fechamento para antes do '\n'; EOF fecha o span.
+  - numero = pp-number de C; "x1" e identificador.
+  - bytes >= 0x80 sao letras de identificador (UTF-8 intacto); BOM inicial
+    passa cru.
+  - NULL, EOF, true, false: sem span.  chr usa a cor de str.
+  - busca de palavra reservada: busca binaria em tabela de 38 palavras,
+    ordenada por strcmp (REUSO-CURSO: aula_06_busca_binaria.c).
+
+NAO VERIFICADO NESTE AMBIENTE
+  (revisado) Corpus real testado: 25 .c + 1 .h dos zips e os 26 blocos <<C
+  dos 30 txt/ => 0 divergencia.  Os "32 arquivos" do plano sao 25 .c + 1 .h
+  + 6 .txt de dados.
