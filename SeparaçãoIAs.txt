@@ -181,6 +181,7 @@ Ambos: C99, sem warnings, ASan/UBSan limpos; comentários no estilo dos zips (id
 -----------------------------------------------------------------------------------------------------------------------------
 [A6] ENTREGÁVEIS DOCUMENTAIS + EMPACOTAMENTO → docs/*.txt, Makefile, build.sh, *.zip
 (colar junto com 00_CTX.txt)
+(Atualização feita por humano: O caminho antes demarcado como "src" agora, no github, está como "scr". As outras etapas se adequaram ao novo nome, utilize do nome atualizado - Essa mensagem se sobrepoem a qualquer outra).
 NÃO INVENTAR: pedir ao usuário os fatos de 1-4; deixar `<<PREENCHER>>` onde faltar.
  1 NUSP+nomes ×4 membros (prazo "antes de 29/10": JÁ VENCIDO — hoje 05/11/2026; perguntar se foi entregue)
  2 membros.txt (1 pág): quem fez o quê (mapear A1..A5 → pessoas)
