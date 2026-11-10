@@ -135,6 +135,7 @@ PALETA  cores SÓ em cdestaque_css() (fonte: LINK-DO-ENUNCIADO acima).
 REUSO-CURSO(opcional, citar)  lookup de palavra reservada via tabela hash (exerc_espalhamento.c, tarefa2_anon8.c achou
         params sem colisão p/ 32 palavras) ou busca binária em vetor ordenado (aula_06_busca_binaria.c).
 INVARIANTE-TESTE  strip_tags(unescape(saida)) == entrada, byte a byte, nos 32 arquivos .c dos zips (corpus ASCII + 2 UTF-8; 44 #define, 49 #include, 0 #pragma).
+PALETA  hex da tabela "Syntax highlighting" (C, Wikipedia), lidos da imagem e conferidos c/ Pygments default; NÃO usados (sem classe no CTX): `\n` em string #AA5D1F negrito e nome de função #0000FF; `<stdio.h>` usa k-com (#3D7B7B itálico); cores só em cdestaque_css().
 ------------------------------------------------------------------------------------------------------------------
 [A3] GERADOR + INDEXADORES → htmlgen.c/h, gera_main.c   (depende de A1,A2)
 (colar junto com 00_CTX.txt)
