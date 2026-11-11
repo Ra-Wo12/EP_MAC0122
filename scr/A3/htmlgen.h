@@ -12,7 +12,8 @@
  *   os c_*.txt e os "stubs").
  * Cria dirOut, p/, c/ e css/ se nao existirem. Nao altera v.
  * Retorno: 0 ok ; != 0 erro, com mensagem em stderr
- *          (1 entrada invalida/colisao de slug, 2 erro de E/S, 3 memoria).
+ *          (1 entrada invalida/colisao de slug/[[slug]] sem destino -- neste
+ *          ultimo caso o site e gerado por inteiro --, 2 erro de E/S, 3 memoria).
  * Saida deterministica: mesma entrada => mesmos bytes.
  */
 int gera_site(Doc *v, int n, const char *dirOut);

@@ -74,6 +74,7 @@ typedef struct {
     void **pool;
     size_t npool, cappool;
     int err;                    /* 0 ok; 1 entrada; 2 E/S; 3 memoria */
+    int sem_dest;               /* [[slug]] sem destino (gera o site e falha no fim) */
 } Ctx;
 
 /* ------------------------------------------------------------ utilitarios */
@@ -476,6 +477,7 @@ static void inline_txt(Ctx *c, FILE *f, const char *s, size_t n, const char *pre
                     alink(f, pre, k == 'p' ? "p" : "c", sl, tit, "ref");
                 } else {
                     size_t q;
+                    c->sem_dest++;
                     fprintf(stderr, "aviso: %s: [[%s]] sem destino\n",
                             c->cur ? c->cur->arq : "?", sl);
                     for (q = 0; sl[q]; q++) fputc(sl[q] == '_' ? ' ' : sl[q], f);
@@ -1357,5 +1359,9 @@ int gera_site(Doc *v, int n, const char *dirOut)
     free(c.vis);
     for (i = 0; (size_t)i < c.npool; i++) free(c.pool[i]);
     free(c.pool);
+    if (!c.err && c.sem_dest) {
+        fprintf(stderr, "gera_site: %d [[slug]] sem destino\n", c.sem_dest);
+        return 1;
+    }
     return c.err;
 }

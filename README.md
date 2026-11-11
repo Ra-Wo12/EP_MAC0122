@@ -52,13 +52,26 @@ um arquivo explicando como compilar cada código C usado (e.g. "para o Kruskal, 
 um arquivo compactado com os fontes TXT (conteúdo do MAC122 usados para processar - na fase 1, todo o conteúdo da avaliação 1);
 um arquivo compactado com os fontes C (todos os código C que devem funcionar) e arquivos auxiliares (e.g. TXT usado para criar um grafo a ser processado pelo Kruskal.
 
-Organização do Repositório, de acordo com as atribuições de cada IA
+Organização do Repositório (A6 - entregáveis documentais - é feito fora do GitHub)
 repo/
-├─ txt/            00_… c_*.txt … 18_dijkstra.txt   ← fonte do conteúdo (A4)
-├─ src/            slug, txtparse, cdestaque, htmlgen, gera_main   (A1-A3)
-├─ extra/          aem_kruskal.c, dijkstra.c, grafo_k1.txt, grafo_k2.txt   (A5)
-├─ aula/           .c e .txt de apoio dos zips
-├─ entrega/        membros, diálogos, dificuldades, como_compilar   (A6)
-├─ tests/          check_links, roundtrip   (A7)
-├─ .github/workflows/site.yml
-└─ .gitignore      gera  *.o  site/
+├─ txt/            01_… 18_dijkstra.txt + c_*.txt                 ← fonte do conteúdo (A4)
+├─ scr/            A1/ slug, txtparse · A2/ cdestaque · A3/ htmlgen, gera_main   (A1-A3)
+├─ extra/          aem_kruskal.c, dijkstra.c, grafo_k1.txt, grafo_k2.txt         (A5)
+├─ tests/          run_tests.sh, check_links.sh, check_site.py, check_txt.py     (A7)
+├─ .github/workflows/site.yml                                     ← CI: testa, gera e publica o site
+└─ .gitignore      gera  *.o  a.out  out/  build/  out_test/ ...
+
+Nota: a pasta do código se chama "scr" (e não "src"); o site é gerado em "out/".
+
+Como compilar, testar e gerar o site (na raiz do repositório; precisa de gcc e python3)
+ Testes completos (compila com -Werror + ASan/UBSan, roda tudo, confere links):
+   sh tests/run_tests.sh
+ Só gerar o site:
+   gcc -std=c99 -Wall -Wextra -Iscr/A1 -Iscr/A2 -Iscr/A3 -o gera scr/A3/gera_main.c scr/A3/htmlgen.c scr/A1/txtparse.c scr/A1/slug.c scr/A2/cdestaque.c
+   ./gera txt out
+   sh tests/check_links.sh out txt
+ O gerador devolve erro (código != 0) se um [[slug]] não tiver destino, se houver slug repetido ou erro de leitura/escrita.
+
+Publicação (GitHub Pages)
+ Em Settings > Pages > Build and deployment > Source, escolher "GitHub Actions" (uma única vez).
+ A cada push na branch main o workflow roda os testes e, se tudo passar, publica o conteúdo de out/.
