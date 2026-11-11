@@ -1,4 +1,9 @@
 gera
 *.o
 a.out
-site/
+out/
+build/
+out_test/
+out_test2/
+txt_neg/
+out_neg/
