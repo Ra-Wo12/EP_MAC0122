@@ -299,8 +299,13 @@ static void head(FILE *f, const char *titulo, const char *pre)
 
 static void foot(FILE *f)
 {
-    fputs("</main>\n<footer>Páginas geradas automaticamente a partir dos "
-          "arquivos TXT do curso.</footer>\n</body>\n</html>\n", f);
+    fputs("</main>\n<footer>Site Projeto EP de MAC0122 - criação de site com conteúdos do curso. "
+          " Separado em Índices e Trilha de Estudos. Bons estudos!.</footer>\n</body>\n</html>\n", f);
+    fputs("</main>\n<footer>Integrantes:"".</footer>\n</body>\n</html>\n", f);
+    fputs("</main>\n<footer>Rafael Biehl"".</footer>\n</body>\n</html>\n", f);
+    fputs("</main>\n<footer>Luís Eduardo"".</footer>\n</body>\n</html>\n", f);
+    fputs("</main>\n<footer>Victor Kenji"".</footer>\n</body>\n</html>\n", f);
+    fputs("</main>\n<footer>Thierry Gabriel"".</footer>\n</body>\n</html>\n", f);
 }
 
 static void alink(FILE *f, const char *pre, const char *pasta, const char *sl,
