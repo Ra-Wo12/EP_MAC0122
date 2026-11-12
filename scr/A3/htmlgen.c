@@ -299,13 +299,8 @@ static void head(FILE *f, const char *titulo, const char *pre)
 
 static void foot(FILE *f)
 {
-    fputs("</main>\n<footer>Site Projeto EP de MAC0122 - criação de site com conteúdos do curso. "
-          " Separado em Índices e Trilha de Estudos. Bons estudos!.</footer>\n</body>\n</html>\n", f);
-    fputs("</main>\n<footer>Integrantes:"".</footer>\n</body>\n</html>\n", f);
-    fputs("</main>\n<footer>Rafael Biehl"".</footer>\n</body>\n</html>\n", f);
-    fputs("</main>\n<footer>Luís Eduardo"".</footer>\n</body>\n</html>\n", f);
-    fputs("</main>\n<footer>Victor Kenji"".</footer>\n</body>\n</html>\n", f);
-    fputs("</main>\n<footer>Thierry Gabriel"".</footer>\n</body>\n</html>\n", f);
+    fputs("</main>\n<footer>Páginas geradas automaticamente a partir dos "
+          "arquivos TXT do curso.</footer>\n</body>\n</html>\n", f);
 }
 
 static void alink(FILE *f, const char *pre, const char *pasta, const char *sl,
@@ -1237,8 +1232,14 @@ static void pagina_inicial(Ctx *c)
     if (!f) return;
     head(f, "MAC0122 — página inicial", "");
     fputs("<h1>MAC0122 — material do curso</h1>\n"
-          "<p>Páginas geradas a partir dos arquivos TXT do curso. "
-          "Escolha um índice ou siga a trilha de estudo.</p>\n"
+          "<p>Site projeto do EP de MAC0122, 12/11/2026. Aqui estão "
+          "constados todos materiais do curso, separados por índices e "
+          "trilha de estudo. Bons estudos!</p>\n"
+          "<p>Integrantes:</p>\n"
+          "<p>Rafael Biehl</p>\n"
+          "<p>Luís Eduardo</p>\n"
+          "<p>Victor Kenji</p>\n"
+          "<p>Thierry Silva</p>\n"
           "<h2>Índices</h2>\n<ul>\n", f);
     for (a = 0; a < 6; a++)
         fprintf(f, "<li><a href=\"%s.html\">%s</a> — %s</li>\n", desc[a][0],
